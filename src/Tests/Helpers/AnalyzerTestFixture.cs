@@ -37,13 +37,13 @@
 #endif
         ];
 
-        protected Task Assert(string markupCode, Action<TestCustomizations> customize = null, CancellationToken cancellationToken = default) =>
+        protected Task Assert(string markupCode, Action<TestCustomizations>? customize = null, CancellationToken cancellationToken = default) =>
             Assert(markupCode, [], customize, cancellationToken);
 
-        protected Task Assert(string markupCode, string expectedDiagnosticId, Action<TestCustomizations> customize = null, CancellationToken cancellationToken = default) =>
+        protected Task Assert(string markupCode, string expectedDiagnosticId, Action<TestCustomizations>? customize = null, CancellationToken cancellationToken = default) =>
             Assert(markupCode, [expectedDiagnosticId], customize, cancellationToken);
 
-        protected async Task Assert(string markupCode, string[] expectedDiagnosticIds, Action<TestCustomizations> customize = null, CancellationToken cancellationToken = default)
+        protected async Task Assert(string markupCode, string[] expectedDiagnosticIds, Action<TestCustomizations>? customize = null, CancellationToken cancellationToken = default)
         {
             var testCustomizations = new TestCustomizations();
             customize?.Invoke(testCustomizations);
@@ -76,6 +76,13 @@ using NServiceBus;
             WriteCompilerDiagnostics(compilerDiagnostics);
 
             var compilation = await document.Project.GetCompilationAsync(cancellationToken);
+
+            if (compilation is null)
+            {
+                NUnit.Framework.Assert.That(compilation, Is.Not.Null);
+                return;
+            }
+
             compilation.Compile();
 
             var analyzerDiagnostics = (await compilation.GetAnalyzerDiagnostics(new TAnalyzer(), cancellationToken)).ToList();
@@ -94,8 +101,13 @@ using NServiceBus;
             NUnit.Framework.Assert.That(actualSpansAndIds, Is.EqualTo(expectedSpansAndIds));
         }
 
-        protected static void WriteCode(string code)
+        protected static void WriteCode(string? code)
         {
+            if (code is null)
+            {
+                return;
+            }
+
             foreach (var (line, index) in code.Replace("\r\n", "\n").Split('\n')
                 .Select((line, index) => (line, index)))
             {
@@ -103,13 +115,13 @@ using NServiceBus;
             }
         }
 
-        protected static Document CreateDocument(string code, string externalTypes, TestCustomizations customizations) => new AdhocWorkspace()
+        protected static Document CreateDocument(string? code, string externalTypes, TestCustomizations customizations) => new AdhocWorkspace()
                 .AddProject("TestProject", LanguageNames.CSharp)
                 .WithCompilationOptions(customizations.CompilationOptions ?? new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddMetadataReferences(customizations.GetMetadataReferences())
                 .AddDocument("Externaltypes", externalTypes)
                 .Project
-                .AddDocument("TestDocument", code);
+                .AddDocument("TestDocument", code ?? string.Empty);
 
         protected static void WriteCompilerDiagnostics(IEnumerable<Diagnostic> diagnostics)
         {
@@ -131,9 +143,9 @@ using NServiceBus;
             }
         }
 
-        static (string, List<TextSpan>) Parse(string markupCode)
+        static (string?, List<TextSpan>) Parse(string? markupCode)
         {
-            if (markupCode == null)
+            if (markupCode is null)
             {
                 return (null, []);
             }

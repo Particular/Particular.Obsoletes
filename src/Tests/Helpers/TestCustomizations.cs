@@ -13,7 +13,7 @@
             typeof(Enumerable)
         ];
 
-        public CompilationOptions CompilationOptions { get; set; }
+        public CompilationOptions? CompilationOptions { get; set; }
 
         public TestCustomizations AddMetadataReferenceUsing<T>()
         {
