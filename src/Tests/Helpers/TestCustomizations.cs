@@ -1,35 +1,34 @@
-﻿namespace Particular.Analyzers.Tests.Helpers
+﻿namespace Tests.Helpers;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
+
+public class TestCustomizations
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
-    using Microsoft.CodeAnalysis;
+    readonly HashSet<Type> typesForMetadataReferences = [
+        typeof(object),
+        typeof(Enumerable)
+    ];
 
-    public class TestCustomizations
+    public CompilationOptions? CompilationOptions { get; set; }
+
+    public TestCustomizations AddMetadataReferenceUsing<T>()
     {
-        readonly HashSet<Type> typesForMetadataReferences = [
-            typeof(object),
-            typeof(Enumerable)
-        ];
+        typesForMetadataReferences.Add(typeof(T));
+        return this;
+    }
 
-        public CompilationOptions? CompilationOptions { get; set; }
+    public IEnumerable<PortableExecutableReference> GetMetadataReferences()
+    {
+        var arr = typesForMetadataReferences
+            .Select(type => type.GetTypeInfo().Assembly)
+            .Distinct()
+            .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
+            .ToArray();
 
-        public TestCustomizations AddMetadataReferenceUsing<T>()
-        {
-            typesForMetadataReferences.Add(typeof(T));
-            return this;
-        }
-
-        public IEnumerable<PortableExecutableReference> GetMetadataReferences()
-        {
-            var arr = typesForMetadataReferences
-                .Select(type => type.GetTypeInfo().Assembly)
-                .Distinct()
-                .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
-                .ToArray();
-
-            return arr;
-        }
+        return arr;
     }
 }

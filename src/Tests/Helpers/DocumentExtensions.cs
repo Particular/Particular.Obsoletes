@@ -1,28 +1,27 @@
-﻿namespace Particular.Analyzers.Tests.Helpers
+﻿namespace Tests.Helpers;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+
+static class DocumentExtensions
 {
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
-
-    static class DocumentExtensions
+    public static async Task<IEnumerable<Diagnostic>> GetCompilerDiagnostics(this Document document, CancellationToken cancellationToken = default)
     {
-        public static async Task<IEnumerable<Diagnostic>> GetCompilerDiagnostics(this Document document, CancellationToken cancellationToken = default)
+        var model = await document.GetSemanticModelAsync(cancellationToken);
+
+        if (model is null)
         {
-            var model = await document.GetSemanticModelAsync(cancellationToken);
-
-            if (model is null)
-            {
-                return [];
-            }
-
-            return model
-               .GetDiagnostics(cancellationToken: cancellationToken)
-               .Where(diagnostic => diagnostic.Severity != DiagnosticSeverity.Hidden)
-               .OrderBy(diagnostic => diagnostic.Location.SourceSpan)
-               .ThenBy(diagnostic => diagnostic.Id);
+            return [];
         }
 
+        return model
+           .GetDiagnostics(cancellationToken: cancellationToken)
+           .Where(diagnostic => diagnostic.Severity != DiagnosticSeverity.Hidden)
+           .OrderBy(diagnostic => diagnostic.Location.SourceSpan)
+           .ThenBy(diagnostic => diagnostic.Id);
     }
+
 }
