@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Particular.Obsoletes/Particular.Obsoletes.csproj" />
+  <Project Path="Tests/Tests.csproj" Id="4cf47362-55ba-48b5-98f5-f06c989ff8ac" />
+</Solution>
