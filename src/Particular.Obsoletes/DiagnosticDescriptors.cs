@@ -19,4 +19,12 @@ public static class DiagnosticDescriptors
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor RemoveObsoleteMember = new(
+        id: DiagnosticIds.RemoveObsoleteMember,
+        title: "Obsolete members should be removed",
+        messageFormat: "The assembly version {0} is equal to or greater than the version specified in 'RemoveInVersion' {1}. The member should be removed or 'RemoveInVersion' increased.",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

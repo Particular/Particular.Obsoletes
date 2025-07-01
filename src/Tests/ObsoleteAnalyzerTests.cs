@@ -49,4 +49,21 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
 
         return Assert(code, DiagnosticIds.MissingObsoleteAttribute);
     }
+
+    [Test]
+    public Task RemoveObsoleteMember()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("3.0.0.0")]
+
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")|]]
+        [Obsolete]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.RemoveObsoleteMember);
+    }
 }

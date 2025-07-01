@@ -8,4 +8,5 @@ public static class DiagnosticIds
 {
     public const string MissingObsoleteMetadataAttribute = "OBSOLETES0001";
     public const string MissingObsoleteAttribute = "OBSOLETES0002";
+    public const string RemoveObsoleteMember = "OBSOLETES0003";
 }

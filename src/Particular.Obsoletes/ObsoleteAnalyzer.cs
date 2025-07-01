@@ -11,7 +11,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 {
     static readonly ImmutableArray<SyntaxKind> syntaxKinds = [SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.InterfaceDeclaration, SyntaxKind.EnumDeclaration, SyntaxKind.ConstructorDeclaration, SyntaxKind.MethodDeclaration, SyntaxKind.PropertyDeclaration, SyntaxKind.FieldDeclaration, SyntaxKind.EventDeclaration, SyntaxKind.DelegateDeclaration];
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [DiagnosticDescriptors.MissingObsoleteMetadataAttribute, DiagnosticDescriptors.MissingObsoleteAttribute];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [DiagnosticDescriptors.MissingObsoleteMetadataAttribute, DiagnosticDescriptors.MissingObsoleteAttribute, DiagnosticDescriptors.RemoveObsoleteMember];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -103,6 +103,46 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
         }
+
+
+        string? message = null;
+        string? treatAsErrorFromVersion = null;
+        string? removeInVersion = null;
+        string? replacementTypeOrMember = null;
+
+        foreach (var argument in obsoleteMetadataAttribute.NamedArguments)
+        {
+            if (argument.Key == "Message")
+            {
+                message = argument.Value.Value?.ToString();
+            }
+            else if (argument.Key == "treatAsErrorFromVersion")
+            {
+                treatAsErrorFromVersion = argument.Value.Value?.ToString();
+            }
+            else if (argument.Key == "RemoveInVersion")
+            {
+                removeInVersion = argument.Value.Value?.ToString();
+            }
+            else if (argument.Key == "ReplacementTypeOrMember")
+            {
+                replacementTypeOrMember = argument.Value.Value?.ToString();
+            }
+        }
+
+
+        _ = message;
+        _ = treatAsErrorFromVersion;
+        _ = replacementTypeOrMember;
+
+        Version.TryParse(removeInVersion, out var result);
+        var assemblyVersion = context.Compilation.Assembly.Identity.Version;
+
+        if (assemblyVersion >= result)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), assemblyVersion, result));
+        }
+
     }
 
     static Location? CreateLocation(SyntaxReference? syntaxReference)
