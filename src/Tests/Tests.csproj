@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Particular.Obsoletes\Particular.Obsoletes.csproj" />
+    <ProjectReference Include="..\Particular.Obsoletes.Fixes\Particular.Obsoletes.Fixes.csproj" />
   </ItemGroup>
 
   <ItemGroup>
