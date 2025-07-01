@@ -53,6 +53,8 @@ public class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer
         using System.Threading;
         using System.Threading.Tasks;
         using Particular.Obsoletes;
+
+
         """ + markupCode;
 
         var (code, markupSpans) = Parse(markupCode);

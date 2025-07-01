@@ -21,4 +21,32 @@ public class ObsoleteExAnalyzerTests : AnalyzerTestFixture<ObsoleteExAnalyzer>
 
         return Assert(code);
     }
+
+    [Test]
+    public Task MissingObsoleteMetadata()
+    {
+        var code = """
+         [[|Obsolete|]]
+         public class Foo
+         {
+
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsolete()
+    {
+        var code = """
+       [[|ObsoleteEx|]]
+       public class Foo
+       {
+
+       }
+       """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteAttribute);
+    }
 }

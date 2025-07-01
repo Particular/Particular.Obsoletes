@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <DefineConstants>$(DefineConstants);FIXES</DefineConstants>
     <LangVersion>12.0</LangVersion>
   </PropertyGroup>
 
