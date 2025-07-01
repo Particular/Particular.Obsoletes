@@ -20,6 +20,10 @@
     <PackageReference Include="Particular.Packaging" Version="4.4.0" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Particular.Obsoletes\DiagnosticIds.cs" />
+  </ItemGroup>
+
   <Target Name="UseMajorMinorPatchForAssemblyVersion" AfterTargets="MinVer">
     <PropertyGroup>
       <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</AssemblyVersion>
