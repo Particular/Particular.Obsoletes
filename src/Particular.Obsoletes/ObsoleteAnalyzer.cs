@@ -56,54 +56,65 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
             if (obsoleteMetadata is not null || obsolete is not null)
             {
-                Analyze(context, obsoleteMetadata, obsolete);
+                Analyze(context, member);
             }
         }
     }
 
-    static void Analyze(SyntaxNodeAnalysisContext context, AttributeSyntax? obsoleteMetadataSyntax, AttributeSyntax? obsoleteSyntax)
+    static void Analyze(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax memberDeclarationSyntax)
     {
-        var obsoleteMetadataSymbol = GetMethodSymbol(context, obsoleteMetadataSyntax, "Particular.Obsoletes.ObsoleteMetadataAttribute");
-        var obsoleteSymbol = GetMethodSymbol(context, obsoleteSyntax, "System.ObsoleteAttribute");
+        var symbol = context.SemanticModel.GetDeclaredSymbol(memberDeclarationSyntax);
 
-        if (obsoleteMetadataSymbol is null && obsoleteSymbol is null)
+        if (symbol is null)
         {
             return;
         }
 
-        if (obsoleteSymbol is not null && obsoleteMetadataSymbol is null)
+        var obsoleteMetadataAttributeType = context.Compilation.GetTypeByMetadataName("Particular.Obsoletes.ObsoleteMetadataAttribute");
+        var obsoleteAttributeType = context.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+
+        AttributeData? obsoleteMetadataAttribute = null;
+        AttributeData? obsoleteAttribute = null;
+
+        foreach (var attribute in symbol.GetAttributes())
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteMetadataAttribute, obsoleteSyntax?.GetLocation()));
-            return;
-        }
-
-        if (obsoleteMetadataSymbol is not null && obsoleteSymbol is null)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, obsoleteMetadataSyntax?.GetLocation()));
-            return;
-        }
-    }
-
-    static IMethodSymbol? GetMethodSymbol(SyntaxNodeAnalysisContext context, AttributeSyntax? attributeSyntax, string typeName)
-    {
-        IMethodSymbol? symbol = null;
-
-        if (attributeSyntax is not null)
-        {
-            symbol = context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol as IMethodSymbol;
-        }
-
-        if (symbol is not null)
-        {
-            var fullName = symbol.ContainingType.ToDisplayString();
-
-            if (fullName != typeName)
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteMetadataAttributeType))
             {
-                symbol = null;
+                obsoleteMetadataAttribute = attribute;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteAttributeType))
+            {
+                obsoleteAttribute = attribute;
             }
         }
 
-        return symbol;
+        if (obsoleteMetadataAttribute is null && obsoleteAttribute is null)
+        {
+            return;
+        }
+
+        if (obsoleteAttribute is not null && obsoleteMetadataAttribute is null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteMetadataAttribute, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
+            return;
+        }
+
+        if (obsoleteMetadataAttribute is not null && obsoleteAttribute is null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
+        }
     }
 
+    static Location? CreateLocation(SyntaxReference? syntaxReference)
+    {
+        Location? location = null;
+
+        if (syntaxReference is not null)
+        {
+            location = Location.Create(syntaxReference.SyntaxTree, syntaxReference.Span);
+        }
+
+        return location;
+
+    }
 }
