@@ -22,4 +22,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../Particular.Obsoletes/ObsoleteExAttribute.cs" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@
 
 namespace Particular.Obsoletes;
 
+using System;
 using System.Diagnostics;
 
 [Conditional("PARTICULAR_OBSOLETES")]

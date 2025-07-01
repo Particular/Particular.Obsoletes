@@ -48,29 +48,17 @@ public class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer
         var testCustomizations = new TestCustomizations();
         customize?.Invoke(testCustomizations);
 
-        var externalTypes =
-@"namespace NServiceBus
-{
-    interface ICancellableContext { }
-    class CancellableContext : ICancellableContext { }
-    interface IMessage { }
-}";
-
-        markupCode =
-@"#pragma warning disable CS8019
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NServiceBus;
-#pragma warning restore CS8019
-
-" +
-            markupCode;
+        markupCode = """
+        using System;
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Particular.Obsoletes;
+        """ + markupCode;
 
         var (code, markupSpans) = Parse(markupCode);
         WriteCode(code);
 
-        var document = CreateDocument(code, externalTypes, testCustomizations);
+        var document = CreateDocument(code, testCustomizations);
 
         var compilerDiagnostics = await document.GetCompilerDiagnostics(cancellationToken);
         WriteCompilerDiagnostics(compilerDiagnostics);
@@ -115,13 +103,18 @@ using NServiceBus;
         }
     }
 
-    protected static Document CreateDocument(string? code, string externalTypes, TestCustomizations customizations) => new AdhocWorkspace()
+    protected static Document CreateDocument(string? code, TestCustomizations customizations)
+    {
+        var obsoleteEx = File.ReadAllText("ObsoleteExAttribute.cs");
+
+        return new AdhocWorkspace()
             .AddProject("TestProject", LanguageNames.CSharp)
             .WithCompilationOptions(customizations.CompilationOptions ?? new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
             .AddMetadataReferences(customizations.GetMetadataReferences())
-            .AddDocument("Externaltypes", externalTypes)
+            .AddDocument("ObsoleteEx", SourceText.From(obsoleteEx, Encoding.UTF8))
             .Project
             .AddDocument("TestDocument", code ?? string.Empty);
+    }
 
     protected static void WriteCompilerDiagnostics(IEnumerable<Diagnostic> diagnostics)
     {
