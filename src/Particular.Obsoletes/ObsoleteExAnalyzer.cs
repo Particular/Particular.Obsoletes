@@ -11,7 +11,7 @@ public class ObsoleteExAnalyzer : DiagnosticAnalyzer
 {
     static readonly ImmutableArray<SyntaxKind> syntaxKinds = [SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.InterfaceDeclaration, SyntaxKind.EnumDeclaration, SyntaxKind.ConstructorDeclaration, SyntaxKind.MethodDeclaration, SyntaxKind.PropertyDeclaration, SyntaxKind.FieldDeclaration, SyntaxKind.EventDeclaration, SyntaxKind.DelegateDeclaration];
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [DiagnosticDescriptors.DroppedTask];
 
     public override void Initialize(AnalysisContext context)
     {
