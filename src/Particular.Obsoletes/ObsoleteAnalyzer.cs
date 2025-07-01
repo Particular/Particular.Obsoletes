@@ -104,7 +104,6 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
         }
 
-
         string? message = null;
         string? treatAsErrorFromVersion = null;
         string? removeInVersion = null;
@@ -116,7 +115,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             {
                 message = argument.Value.Value?.ToString();
             }
-            else if (argument.Key == "treatAsErrorFromVersion")
+            else if (argument.Key == "TreatAsErrorFromVersion")
             {
                 treatAsErrorFromVersion = argument.Value.Value?.ToString();
             }
@@ -129,7 +128,6 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
                 replacementTypeOrMember = argument.Value.Value?.ToString();
             }
         }
-
 
         _ = message;
         _ = treatAsErrorFromVersion;
