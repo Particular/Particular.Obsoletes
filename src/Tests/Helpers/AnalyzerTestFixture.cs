@@ -107,13 +107,13 @@ public class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer
 
     protected static Document CreateDocument(string? code, TestCustomizations customizations)
     {
-        var obsoleteEx = File.ReadAllText("ObsoleteExAttribute.cs");
+        var obsoleteMetadata = File.ReadAllText("ObsoleteMetadataAttribute.cs");
 
         return new AdhocWorkspace()
             .AddProject("TestProject", LanguageNames.CSharp)
             .WithCompilationOptions(customizations.CompilationOptions ?? new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
             .AddMetadataReferences(customizations.GetMetadataReferences())
-            .AddDocument("ObsoleteEx", SourceText.From(obsoleteEx, Encoding.UTF8))
+            .AddDocument("ObsoleteMetadata", SourceText.From(obsoleteMetadata, Encoding.UTF8))
             .Project
             .AddDocument("TestDocument", code ?? string.Empty);
     }

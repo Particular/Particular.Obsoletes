@@ -3,7 +3,7 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CodeFixes;
 
-class ObsoleteExCodeFixProvider : CodeFixProvider
+class ObsoleteCodeFixProvider : CodeFixProvider
 {
     public override ImmutableArray<string> FixableDiagnosticIds => throw new NotImplementedException();
 

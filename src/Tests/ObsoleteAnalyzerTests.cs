@@ -5,14 +5,14 @@ using NUnit.Framework;
 using Particular.Obsoletes;
 using Tests.Helpers;
 
-public class ObsoleteExAnalyzerTests : AnalyzerTestFixture<ObsoleteExAnalyzer>
+public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
 {
     [Test]
     public Task Test()
     {
         var code = """
             [Obsolete]
-            [global::Particular.Obsoletes.ObsoleteEx(Message = "blah")]
+            [global::Particular.Obsoletes.ObsoleteMetadata(Message = "blah")]
             public class Foo
             {
 
@@ -40,7 +40,7 @@ public class ObsoleteExAnalyzerTests : AnalyzerTestFixture<ObsoleteExAnalyzer>
     public Task MissingObsolete()
     {
         var code = """
-       [[|ObsoleteEx|]]
+       [[|ObsoleteMetadata|]]
        public class Foo
        {
 

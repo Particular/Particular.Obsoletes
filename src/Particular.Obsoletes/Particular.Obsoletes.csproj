@@ -15,7 +15,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageProjectUrl>https://particular.net</PackageProjectUrl>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddObsoleteExAttributeToPackage</TargetsForTfmSpecificContentInPackage>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddObsoleteMetadataAttributeToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,9 +32,9 @@
     <None Include="..\Particular.Obsoletes.Fixes\bin\$(Configuration)\$(TargetFramework)\Particular.Obsoletes.Fixes.dll" Pack="true" PackagePath="analyzers/dotnet/roslyn4.14/cs" Visible="false" />
   </ItemGroup>
 
-  <Target Name="AddObsoleteExAttributeToPackage">
+  <Target Name="AddObsoleteMetadataAttributeToPackage">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="ObsoleteExAttribute.cs" PackagePath="contentFiles/cs/$(TargetFramework)/$(MSBuildProjectName)" BuildAction="Compile"/>
+      <TfmSpecificPackageFile Include="ObsoleteMetadataAttribute.cs" PackagePath="contentFiles/cs/$(TargetFramework)/$(MSBuildProjectName)" BuildAction="Compile"/>
     </ItemGroup>
   </Target>
 

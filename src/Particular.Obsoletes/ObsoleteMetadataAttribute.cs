@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 [Conditional("PARTICULAR_OBSOLETES")]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Event | AttributeTargets.Interface | AttributeTargets.Delegate, Inherited = false)]
-sealed class ObsoleteExAttribute : Attribute
+sealed class ObsoleteMetadataAttribute : Attribute
 {
     public string? Message { get; set; }
 

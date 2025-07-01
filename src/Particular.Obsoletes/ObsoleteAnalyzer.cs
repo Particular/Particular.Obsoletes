@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class ObsoleteExAnalyzer : DiagnosticAnalyzer
+public class ObsoleteAnalyzer : DiagnosticAnalyzer
 {
     static readonly ImmutableArray<SyntaxKind> syntaxKinds = [SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.InterfaceDeclaration, SyntaxKind.EnumDeclaration, SyntaxKind.ConstructorDeclaration, SyntaxKind.MethodDeclaration, SyntaxKind.PropertyDeclaration, SyntaxKind.FieldDeclaration, SyntaxKind.EventDeclaration, SyntaxKind.DelegateDeclaration];
 
@@ -24,7 +24,7 @@ public class ObsoleteExAnalyzer : DiagnosticAnalyzer
     {
         if (context.Node is MemberDeclarationSyntax member && member.AttributeLists.Any())
         {
-            AttributeSyntax? obsoleteEx = null;
+            AttributeSyntax? obsoleteMetadata = null;
             AttributeSyntax? obsolete = null;
 
             foreach (var attributeListSyntax in member.AttributeLists)
@@ -43,9 +43,9 @@ public class ObsoleteExAnalyzer : DiagnosticAnalyzer
                         continue;
                     }
 
-                    if (nameToken.Value.ValueText is "ObsoleteEx")
+                    if (nameToken.Value.ValueText is "ObsoleteMetadata")
                     {
-                        obsoleteEx = attributeSyntax;
+                        obsoleteMetadata = attributeSyntax;
                     }
                     else if (nameToken.Value.ValueText is "Obsolete")
                     {
@@ -54,32 +54,32 @@ public class ObsoleteExAnalyzer : DiagnosticAnalyzer
                 }
             }
 
-            if (obsoleteEx is not null || obsolete is not null)
+            if (obsoleteMetadata is not null || obsolete is not null)
             {
-                Analyze(context, obsoleteEx, obsolete);
+                Analyze(context, obsoleteMetadata, obsolete);
             }
         }
     }
 
-    static void Analyze(SyntaxNodeAnalysisContext context, AttributeSyntax? obsoleteExSyntax, AttributeSyntax? obsoleteSyntax)
+    static void Analyze(SyntaxNodeAnalysisContext context, AttributeSyntax? obsoleteMetadataSyntax, AttributeSyntax? obsoleteSyntax)
     {
-        var obsoleteExSymbol = GetMethodSymbol(context, obsoleteExSyntax, "Particular.Obsoletes.ObsoleteExAttribute");
+        var obsoleteMetadataSymbol = GetMethodSymbol(context, obsoleteMetadataSyntax, "Particular.Obsoletes.ObsoleteMetadataAttribute");
         var obsoleteSymbol = GetMethodSymbol(context, obsoleteSyntax, "System.ObsoleteAttribute");
 
-        if (obsoleteExSymbol is null && obsoleteSymbol is null)
+        if (obsoleteMetadataSymbol is null && obsoleteSymbol is null)
         {
             return;
         }
 
-        if (obsoleteSymbol is not null && obsoleteExSymbol is null)
+        if (obsoleteSymbol is not null && obsoleteMetadataSymbol is null)
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteMetadataAttribute, obsoleteSyntax?.GetLocation()));
             return;
         }
 
-        if (obsoleteExSymbol is not null && obsoleteSymbol is null)
+        if (obsoleteMetadataSymbol is not null && obsoleteSymbol is null)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, obsoleteExSyntax?.GetLocation()));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, obsoleteMetadataSyntax?.GetLocation()));
             return;
         }
     }

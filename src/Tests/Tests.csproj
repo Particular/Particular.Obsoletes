@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../Particular.Obsoletes/ObsoleteExAttribute.cs" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="../Particular.Obsoletes/ObsoleteMetadataAttribute.cs" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
 </Project>
