@@ -8,11 +8,13 @@ using Tests.Helpers;
 public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
 {
     [Test]
-    public Task Test()
+    public Task NoErrors()
     {
         var code = """
-            [Obsolete]
-            [global::Particular.Obsoletes.ObsoleteMetadata(Message = "blah")]
+            [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+            [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+            [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
             public class Foo
             {
 
@@ -37,10 +39,96 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     }
 
     [Test]
+    public Task MissingTreatAsErrorFromVersion()
+    {
+        var code = """
+     [[|ObsoleteMetadata(RemoveInVersion = "3.0")|]]
+     public class Foo
+     {
+
+     }
+     """;
+
+        return Assert(code, DiagnosticIds.MissingTreatAsErrorFromVersion);
+    }
+
+    [Test]
+    public Task MissingRemoveInVersion()
+    {
+        var code = """
+     [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0")|]]
+     public class Foo
+     {
+
+     }
+     """;
+
+        return Assert(code, DiagnosticIds.MissingRemoveInVersion);
+    }
+
+    [Test]
+    public Task InvalidTreatAsErrorFromVersion()
+    {
+        var code = """
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "notaversion", RemoveInVersion = "3.0")|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.InvalidTreatAsErrorFromVersion);
+    }
+
+    [Test]
+    public Task InvalidRemoveInVersion()
+    {
+        var code = """
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "notaversion")|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.InvalidRemoveInVersion);
+    }
+
+    [Test]
+    public Task RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion()
+    {
+        var code = """
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "3.0", RemoveInVersion = "2.0")|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion);
+    }
+
+    [Test]
+    public Task RemoveObsoleteMember()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("3.0.0.0")]
+
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.RemoveObsoleteMember);
+    }
+
+    [Test]
     public Task MissingObsolete()
     {
         var code = """
-       [[|ObsoleteMetadata|]]
+       [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")|]]
        public class Foo
        {
 
@@ -51,19 +139,62 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     }
 
     [Test]
-    public Task RemoveObsoleteMember()
+    public Task ObsoleteAttributeMissingConstructorArguments()
     {
         var code = """
-        [assembly: System.Reflection.AssemblyVersionAttribute("3.0.0.0")]
+       [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+       [[|Obsolete|]]
+       public class Foo
+       {
 
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")|]]
-        [Obsolete]
+       }
+       """;
+
+        return Assert(code, DiagnosticIds.ObsoleteAttributeMissingConstructorArguments);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeMessageArgument()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+        [[|Obsolete("", false)|]]
         public class Foo
         {
 
         }
         """;
 
-        return Assert(code, DiagnosticIds.RemoveObsoleteMember);
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeMessageArgument);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeIsErrorArgument()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+        [[|Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", true)|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument);
+    }
+
+    [Test]
+    public Task BothArgumentsIncorrect()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+        [[|Obsolete("", true)|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, [DiagnosticIds.IncorrectObsoleteAttributeMessageArgument, DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument]);
     }
 }

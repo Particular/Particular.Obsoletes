@@ -1,6 +1,7 @@
 ﻿namespace Particular.Obsoletes;
 
 using System.Collections.Immutable;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -9,9 +10,34 @@ using Microsoft.CodeAnalysis.Diagnostics;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class ObsoleteAnalyzer : DiagnosticAnalyzer
 {
-    static readonly ImmutableArray<SyntaxKind> syntaxKinds = [SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.InterfaceDeclaration, SyntaxKind.EnumDeclaration, SyntaxKind.ConstructorDeclaration, SyntaxKind.MethodDeclaration, SyntaxKind.PropertyDeclaration, SyntaxKind.FieldDeclaration, SyntaxKind.EventDeclaration, SyntaxKind.DelegateDeclaration];
+    static readonly ImmutableArray<SyntaxKind> syntaxKinds =
+        [
+            SyntaxKind.ClassDeclaration,
+            SyntaxKind.StructDeclaration,
+            SyntaxKind.InterfaceDeclaration,
+            SyntaxKind.EnumDeclaration,
+            SyntaxKind.ConstructorDeclaration,
+            SyntaxKind.MethodDeclaration,
+            SyntaxKind.PropertyDeclaration,
+            SyntaxKind.FieldDeclaration,
+            SyntaxKind.EventDeclaration,
+            SyntaxKind.DelegateDeclaration
+        ];
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [DiagnosticDescriptors.MissingObsoleteMetadataAttribute, DiagnosticDescriptors.MissingObsoleteAttribute, DiagnosticDescriptors.RemoveObsoleteMember];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+        [
+            DiagnosticDescriptors.MissingObsoleteMetadataAttribute,
+            DiagnosticDescriptors.MissingObsoleteAttribute,
+            DiagnosticDescriptors.InvalidTreatAsErrorFromVersion,
+            DiagnosticDescriptors.InvalidRemoveInVersion,
+            DiagnosticDescriptors.RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion,
+            DiagnosticDescriptors.RemoveObsoleteMember,
+            DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments,
+            DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument,
+            DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument,
+            DiagnosticDescriptors.MissingTreatAsErrorFromVersion,
+            DiagnosticDescriptors.MissingRemoveInVersion
+        ];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -88,25 +114,21 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (obsoleteMetadataAttribute is null && obsoleteAttribute is null)
+        if (obsoleteMetadataAttribute is null)
         {
-            return;
-        }
+            if (obsoleteAttribute is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteMetadataAttribute, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
+            }
 
-        if (obsoleteAttribute is not null && obsoleteMetadataAttribute is null)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteMetadataAttribute, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
             return;
-        }
-
-        if (obsoleteMetadataAttribute is not null && obsoleteAttribute is null)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
         }
 
         string? message = null;
-        string? treatAsErrorFromVersion = null;
-        string? removeInVersion = null;
+        string? treatAsErrorFromVersionValue = null;
+        bool treatAsErrorFromVersionSet = false;
+        string? removeInVersionValue = null;
+        bool removeInVersionSet = false;
         string? replacementTypeOrMember = null;
 
         foreach (var argument in obsoleteMetadataAttribute.NamedArguments)
@@ -117,11 +139,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             }
             else if (argument.Key == "TreatAsErrorFromVersion")
             {
-                treatAsErrorFromVersion = argument.Value.Value?.ToString();
+                treatAsErrorFromVersionValue = argument.Value.Value?.ToString();
+                treatAsErrorFromVersionSet = true;
             }
             else if (argument.Key == "RemoveInVersion")
             {
-                removeInVersion = argument.Value.Value?.ToString();
+                removeInVersionValue = argument.Value.Value?.ToString();
+                removeInVersionSet = true;
             }
             else if (argument.Key == "ReplacementTypeOrMember")
             {
@@ -129,18 +153,77 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        _ = message;
-        _ = treatAsErrorFromVersion;
-        _ = replacementTypeOrMember;
-
-        Version.TryParse(removeInVersion, out var result);
-        var assemblyVersion = context.Compilation.Assembly.Identity.Version;
-
-        if (assemblyVersion >= result)
+        if (!treatAsErrorFromVersionSet)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), assemblyVersion, result));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), treatAsErrorFromVersionValue));
         }
 
+        if (!removeInVersionSet)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), removeInVersionValue));
+        }
+
+        if (!treatAsErrorFromVersionSet || !removeInVersionSet)
+        {
+            return;
+        }
+
+        if (!Version.TryParse(treatAsErrorFromVersionValue, out var treatAsErrorFromVersion))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), treatAsErrorFromVersionValue));
+        }
+
+        if (!Version.TryParse(removeInVersionValue, out var removeInVersion))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), removeInVersionValue));
+        }
+
+        if (treatAsErrorFromVersion is null || removeInVersion is null)
+        {
+            return;
+        }
+
+        if (removeInVersion <= treatAsErrorFromVersion)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), removeInVersion, treatAsErrorFromVersion));
+            return;
+        }
+
+        var assemblyVersion = context.Compilation.Assembly.Identity.Version;
+
+        if (assemblyVersion >= removeInVersion)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), assemblyVersion, removeInVersion));
+            return;
+        }
+
+        if (obsoleteAttribute is null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
+            return;
+        }
+
+        if (obsoleteAttribute.ConstructorArguments.Length != 2)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), obsoleteAttribute.ConstructorArguments.Length));
+            return;
+        }
+
+        var obsoleteMessage = obsoleteAttribute.ConstructorArguments[0].Value?.ToString();
+        var isError = (bool)(obsoleteAttribute.ConstructorArguments[1].Value ?? false);
+
+        var expectedObsoleteMessage = BuildMessage(assemblyVersion, message, replacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
+        var expectedIsError = treatAsErrorFromVersion is not null && assemblyVersion >= treatAsErrorFromVersion;
+
+        if (obsoleteMessage != expectedObsoleteMessage)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
+        }
+
+        if (isError != expectedIsError)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
+        }
     }
 
     static Location? CreateLocation(SyntaxReference? syntaxReference)
@@ -154,5 +237,31 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         return location;
 
+    }
+
+    static string BuildMessage(Version assemblyVersion, string? message, string? replacementTypeOrMember, Version treatAsErrorFromVersion, Version removeInVersion)
+    {
+        var builder = new StringBuilder();
+
+        if (message is not null)
+        {
+            builder.AppendFormat("{0}. ", message);
+        }
+
+        if (replacementTypeOrMember is not null)
+        {
+            builder.AppendFormat("Use '{0}' instead. ", replacementTypeOrMember);
+        }
+
+        if (assemblyVersion < treatAsErrorFromVersion)
+        {
+            var treatAsErrorFromVersionPatch = treatAsErrorFromVersion.Build == -1 ? 0 : treatAsErrorFromVersion.Build;
+            builder.AppendFormat("Will be treated as an error from version {0}.{1}.{2}. ", treatAsErrorFromVersion.Major, treatAsErrorFromVersion.Minor, treatAsErrorFromVersionPatch);
+        }
+
+        var removeInVersionPatch = removeInVersion.Build == -1 ? 0 : removeInVersion.Build;
+        builder.AppendFormat("Will be removed in version {0}.{1}.{2}.", removeInVersion.Major, removeInVersion.Minor, removeInVersionPatch);
+
+        return builder.ToString();
     }
 }
