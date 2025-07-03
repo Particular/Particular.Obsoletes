@@ -168,12 +168,12 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!Version.TryParse(treatAsErrorFromVersionValue, out var treatAsErrorFromVersion))
+        if (!TryParseVersion(treatAsErrorFromVersionValue, out var treatAsErrorFromVersion))
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), treatAsErrorFromVersionValue));
         }
 
-        if (!Version.TryParse(removeInVersionValue, out var removeInVersion))
+        if (!TryParseVersion(removeInVersionValue, out var removeInVersion))
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), removeInVersionValue));
         }
@@ -237,6 +237,17 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         return location;
 
+    }
+
+    static bool TryParseVersion(string? input, out Version? result)
+    {
+        if (input?.IndexOf('.') == -1 && int.TryParse(input, out var major))
+        {
+            result = new Version(major, 0, 0);
+            return true;
+        }
+
+        return Version.TryParse(input, out result);
     }
 
     static string BuildMessage(Version assemblyVersion, string? message, string? replacementTypeOrMember, Version treatAsErrorFromVersion, Version removeInVersion)

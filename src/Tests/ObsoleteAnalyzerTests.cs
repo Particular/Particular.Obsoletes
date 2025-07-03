@@ -42,7 +42,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task MissingTreatAsErrorFromVersion()
     {
         var code = """
-     [[|ObsoleteMetadata(RemoveInVersion = "3.0")|]]
+     [[|ObsoleteMetadata(RemoveInVersion = "3")|]]
      public class Foo
      {
 
@@ -56,7 +56,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task MissingRemoveInVersion()
     {
         var code = """
-     [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0")|]]
+     [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2")|]]
      public class Foo
      {
 
@@ -70,7 +70,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task InvalidTreatAsErrorFromVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "notaversion", RemoveInVersion = "3.0")|]]
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "notaversion", RemoveInVersion = "3")|]]
         public class Foo
         {
 
@@ -84,7 +84,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task InvalidRemoveInVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "notaversion")|]]
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "notaversion")|]]
         public class Foo
         {
 
@@ -98,7 +98,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "3.0", RemoveInVersion = "2.0")|]]
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "3", RemoveInVersion = "2")|]]
         public class Foo
         {
 
@@ -114,7 +114,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         var code = """
         [assembly: System.Reflection.AssemblyVersionAttribute("3.0.0.0")]
 
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")|]]
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")|]]
         public class Foo
         {
 
@@ -128,7 +128,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task MissingObsolete()
     {
         var code = """
-       [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")|]]
+       [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")|]]
        public class Foo
        {
 
@@ -142,7 +142,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task ObsoleteAttributeMissingConstructorArguments()
     {
         var code = """
-       [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+       [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
        [[|Obsolete|]]
        public class Foo
        {
@@ -157,7 +157,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task IncorrectObsoleteAttributeMessageArgument()
     {
         var code = """
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [[|Obsolete("", false)|]]
         public class Foo
         {
@@ -172,7 +172,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task IncorrectObsoleteAttributeIsErrorArgument()
     {
         var code = """
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [[|Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", true)|]]
         public class Foo
         {
@@ -187,7 +187,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task BothArgumentsIncorrect()
     {
         var code = """
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2.0", RemoveInVersion = "3.0")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [[|Obsolete("", true)|]]
         public class Foo
         {
