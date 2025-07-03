@@ -70,7 +70,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task InvalidTreatAsErrorFromVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "notaversion", RemoveInVersion = "3")|]]
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "not-a-version", RemoveInVersion = "3")|]]
         public class Foo
         {
 
@@ -84,7 +84,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task InvalidRemoveInVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "notaversion")|]]
+        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "not-a-version")|]]
         public class Foo
         {
 
