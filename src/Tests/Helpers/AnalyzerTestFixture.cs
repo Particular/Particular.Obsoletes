@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -12,60 +14,33 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
-public class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer, new()
+public partial class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer, new()
 {
-    protected static readonly List<string> PrivateModifiers = ["", "private"];
+    protected Task Assert(string markupCode, CancellationToken cancellationToken = default) =>
+        Assert(markupCode, [], [], cancellationToken);
 
-    protected static readonly List<string> NonPrivateModifiers = ["public", "protected", "internal", "protected internal", "private protected"];
+    protected Task Assert(string markupCode, string expectedDiagnosticId, CancellationToken cancellationToken = default) =>
+        Assert(markupCode, [expectedDiagnosticId], [], cancellationToken);
 
-    protected static readonly List<string> InterfacePrivateModifiers =
-    [
-#if NET
-        "private",
-#endif
-    ];
+    protected Task Assert(string markupCode, string[] expectedDiagnosticIds, CancellationToken cancellationToken = default) =>
+        Assert(markupCode, expectedDiagnosticIds, [], cancellationToken);
 
-    protected static readonly List<string> InterfaceNonPrivateModifiers =
-    [
-        "",
-        "public",
-        "internal",
-#if NET
-        "protected",
-        "protected internal",
-        "private protected",
-#endif
-    ];
-
-    protected Task Assert(string markupCode, Action<TestCustomizations>? customize = null, CancellationToken cancellationToken = default) =>
-        Assert(markupCode, [], customize, cancellationToken);
-
-    protected Task Assert(string markupCode, string expectedDiagnosticId, Action<TestCustomizations>? customize = null, CancellationToken cancellationToken = default) =>
-        Assert(markupCode, [expectedDiagnosticId], customize, cancellationToken);
-
-    protected async Task Assert(string markupCode, string[] expectedDiagnosticIds, Action<TestCustomizations>? customize = null, CancellationToken cancellationToken = default)
+    protected async Task Assert(string markupCode, string[] expectedDiagnosticIds, string[] ignoreDiagnosticIds, CancellationToken cancellationToken = default)
     {
-        var testCustomizations = new TestCustomizations();
-        customize?.Invoke(testCustomizations);
-
-        markupCode = """
-        using System;
-        using System.Threading;
-        using System.Threading.Tasks;
-        using Particular.Obsoletes;
-
-
-        """ + markupCode;
+        markupCode = AddUsings(markupCode);
 
         var (code, markupSpans) = Parse(markupCode);
-        WriteCode(code);
 
-        var document = CreateDocument(code, testCustomizations);
+        var project = CreateProject(code);
+        await WriteCode(project, cancellationToken);
 
-        var compilerDiagnostics = await document.GetCompilerDiagnostics(cancellationToken);
+        var compilerDiagnostics = (await Task.WhenAll(project.Documents
+            .Select(doc => doc.GetCompilerDiagnostics(cancellationToken))))
+            .SelectMany(diagnostics => diagnostics);
+
         WriteCompilerDiagnostics(compilerDiagnostics);
 
-        var compilation = await document.Project.GetCompilationAsync(cancellationToken);
+        var compilation = await project.GetCompilationAsync(cancellationToken);
 
         if (compilation is null)
         {
@@ -75,47 +50,65 @@ public class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer
 
         compilation.Compile();
 
-        var analyzerDiagnostics = (await compilation.GetAnalyzerDiagnostics(new TAnalyzer(), cancellationToken)).ToList();
+        var analyzerDiagnostics = (await compilation.GetAnalyzerDiagnostics(new TAnalyzer(), cancellationToken))
+            .Where(d => !ignoreDiagnosticIds.Contains(d.Id))
+            .ToList();
         WriteAnalyzerDiagnostics(analyzerDiagnostics);
 
         var expectedSpansAndIds = expectedDiagnosticIds
-            .SelectMany(id => markupSpans.Select(span => (span, id)))
+            .SelectMany(id => markupSpans.Select(span => (span.file, span.span, id)))
             .OrderBy(item => item.span)
             .ThenBy(item => item.id)
             .ToList();
 
         var actualSpansAndIds = analyzerDiagnostics
-            .Select(diagnostic => (diagnostic.Location.SourceSpan, diagnostic.Id))
+            .Select(diagnostic => (diagnostic.Location.SourceTree?.FilePath, diagnostic.Location.SourceSpan, diagnostic.Id))
             .ToList();
 
-        NUnit.Framework.Assert.That(actualSpansAndIds, Is.EqualTo(expectedSpansAndIds));
+        NUnit.Framework.Assert.That(actualSpansAndIds, Is.EqualTo(expectedSpansAndIds).AsCollection);
     }
 
-    protected static void WriteCode(string? code)
+    protected static string AddUsings(string markupCode) =>
+        """
+        using System;
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Particular.Obsoletes;
+
+
+        """ + markupCode;
+
+    protected static async Task WriteCode(Project project, CancellationToken cancellationToken = default)
     {
-        if (code is null)
+        foreach (var document in project.Documents)
         {
-            return;
-        }
-
-        foreach (var (line, index) in code.Replace("\r\n", "\n").Split('\n')
+            TestContext.Out.WriteLine(document.Name);
+            var code = await document.GetCode(cancellationToken);
+            foreach (var (line, index) in code.Replace("\r\n", "\n").Split('\n')
             .Select((line, index) => (line, index)))
-        {
-            TestContext.Out.WriteLine($"  {index + 1,3}: {line}");
+            {
+                TestContext.Out.WriteLine($"  {index + 1,3}: {line}");
+            }
         }
     }
 
-    protected static Document CreateDocument(string? code, TestCustomizations customizations)
+    protected Project CreateProject(string[] code)
     {
         var obsoleteMetadata = File.ReadAllText("ObsoleteMetadataAttribute.cs");
 
-        return new AdhocWorkspace()
+        var project = new AdhocWorkspace()
             .AddProject("TestProject", LanguageNames.CSharp)
-            .WithCompilationOptions(customizations.CompilationOptions ?? new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-            .AddMetadataReferences(customizations.GetMetadataReferences())
+            .WithCompilationOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+            .AddMetadataReference(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
             .AddDocument("ObsoleteMetadata", SourceText.From(obsoleteMetadata, Encoding.UTF8))
-            .Project
-            .AddDocument("TestDocument", code ?? string.Empty);
+            .Project;
+
+        for (int i = 0; i < code.Length; i++)
+        {
+            project = project.AddDocument($"TestDocument{i}", code[i]).Project;
+        }
+
+        return project;
     }
 
     protected static void WriteCompilerDiagnostics(IEnumerable<Diagnostic> diagnostics)
@@ -138,45 +131,62 @@ public class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    static (string?, List<TextSpan>) Parse(string? markupCode)
+    protected static string[] SplitMarkupCodeIntoFiles(string markupCode) => [.. DocumentSplittingRegex().Split(markupCode).Where(docCode => !string.IsNullOrWhiteSpace(docCode))];
+
+    static (string[] code, List<(string file, TextSpan span)>) Parse(string markupCode)
     {
         if (markupCode is null)
         {
-            return (null, []);
+            return ([], []);
         }
 
-        var code = new StringBuilder();
-        var markupSpans = new List<TextSpan>();
+        var documents = SplitMarkupCodeIntoFiles(markupCode);
 
-        var remainingCode = markupCode;
-        var remainingCodeStart = 0;
+        var markupSpans = new List<(string, TextSpan)>();
 
-        while (remainingCode.Length > 0)
+        for (var i = 0; i < documents.Length; i++)
         {
-            var beforeAndAfterOpening = remainingCode.Split(["[|"], 2, StringSplitOptions.None);
+            var code = new StringBuilder();
+            var name = $"TestDocument{i}";
 
-            if (beforeAndAfterOpening.Length == 1)
+            var remainingCode = documents[i];
+            var remainingCodeStart = 0;
+
+            while (remainingCode.Length > 0)
             {
-                _ = code.Append(beforeAndAfterOpening[0]);
-                break;
+                var beforeAndAfterOpening = remainingCode.Split(openingSeparator, 2, StringSplitOptions.None);
+
+                if (beforeAndAfterOpening.Length == 1)
+                {
+                    _ = code.Append(beforeAndAfterOpening[0]);
+                    break;
+                }
+
+                var midAndAfterClosing = beforeAndAfterOpening[1].Split(closingSeparator, 2, StringSplitOptions.None);
+
+                if (midAndAfterClosing.Length == 1)
+                {
+                    throw new Exception("The markup code does not contain a closing '|]'");
+                }
+
+                var markupSpan = new TextSpan(remainingCodeStart + beforeAndAfterOpening[0].Length, midAndAfterClosing[0].Length);
+
+                _ = code.Append(beforeAndAfterOpening[0]).Append(midAndAfterClosing[0]);
+                markupSpans.Add((name, markupSpan));
+
+                remainingCode = midAndAfterClosing[1];
+                remainingCodeStart += beforeAndAfterOpening[0].Length + markupSpan.Length;
             }
 
-            var midAndAfterClosing = beforeAndAfterOpening[1].Split(["|]"], 2, StringSplitOptions.None);
-
-            if (midAndAfterClosing.Length == 1)
-            {
-                throw new Exception("The markup code does not contain a closing '|]'");
-            }
-
-            var markupSpan = new TextSpan(remainingCodeStart + beforeAndAfterOpening[0].Length, midAndAfterClosing[0].Length);
-
-            _ = code.Append(beforeAndAfterOpening[0]).Append(midAndAfterClosing[0]);
-            markupSpans.Add(markupSpan);
-
-            remainingCode = midAndAfterClosing[1];
-            remainingCodeStart += beforeAndAfterOpening[0].Length + markupSpan.Length;
+            documents[i] = code.ToString();
         }
 
-        return (code.ToString(), markupSpans);
+        return (documents, markupSpans);
     }
+
+    static readonly string[] openingSeparator = ["[|"];
+    static readonly string[] closingSeparator = ["|]"];
+
+    [GeneratedRegex("^-{5,}.*", RegexOptions.Multiline)]
+    private static partial Regex DocumentSplittingRegex();
 }
