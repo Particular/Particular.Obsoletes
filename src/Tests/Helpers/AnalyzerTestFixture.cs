@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -94,14 +95,16 @@ public partial class AnalyzerTestFixture<TAnalyzer> where TAnalyzer : Diagnostic
 
     protected Project CreateProject(string[] code)
     {
-        var obsoleteMetadata = File.ReadAllText("ObsoleteMetadataAttribute.cs");
+        var netStandard = AssemblyLoadContext.Default.Assemblies.First(a => a.FullName?.StartsWith("netstandard") ?? false);
+        var systemRuntime = AssemblyLoadContext.Default.Assemblies.First(a => a.FullName?.StartsWith("System.Runtime") ?? false);
 
         var project = new AdhocWorkspace()
             .AddProject("TestProject", LanguageNames.CSharp)
             .WithCompilationOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
             .AddMetadataReference(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
-            .AddDocument("ObsoleteMetadata", SourceText.From(obsoleteMetadata, Encoding.UTF8))
-            .Project;
+            .AddMetadataReference(MetadataReference.CreateFromFile(netStandard.Location))
+            .AddMetadataReference(MetadataReference.CreateFromFile(systemRuntime.Location))
+            .AddMetadataReference(MetadataReference.CreateFromFile("Particular.Obsoletes.Attributes.dll"));
 
         for (int i = 0; i < code.Length; i++)
         {
