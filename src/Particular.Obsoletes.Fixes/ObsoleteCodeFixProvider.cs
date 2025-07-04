@@ -1,11 +1,29 @@
 ﻿namespace Particular.Obsoletes.Fixes;
 
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 
-class ObsoleteCodeFixProvider : CodeFixProvider
+[ExportCodeFixProvider(LanguageNames.CSharp)]
+public class ObsoleteCodeFixProvider : CodeFixProvider
 {
-    public override ImmutableArray<string> FixableDiagnosticIds => throw new NotImplementedException();
+    public override ImmutableArray<string> FixableDiagnosticIds =>
+        [
+            DiagnosticIds.MissingObsoleteAttribute,
+            DiagnosticIds.ObsoleteAttributeMissingConstructorArguments,
+            DiagnosticIds.IncorrectObsoleteAttributeMessageArgument,
+            DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument
+        ];
 
-    public override Task RegisterCodeFixesAsync(CodeFixContext context) => throw new NotImplementedException();
+    public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+
+    public override Task RegisterCodeFixesAsync(CodeFixContext context)
+    {
+        var diagnostic = context.Diagnostics.First();
+        var properties = diagnostic.Properties;
+        _ = properties;
+
+        return Task.CompletedTask;
+    }
+
 }

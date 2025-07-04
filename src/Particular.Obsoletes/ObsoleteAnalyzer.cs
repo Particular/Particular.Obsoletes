@@ -197,32 +197,38 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        var expectedObsoleteMessage = BuildMessage(assemblyVersion, message, replacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
+        var expectedIsError = treatAsErrorFromVersion is not null && assemblyVersion >= treatAsErrorFromVersion;
+
+        var properties = new Dictionary<string, string?>
+        {
+            { "Message", expectedObsoleteMessage },
+            { "IsError ", expectedIsError.ToString() },
+        }.ToImmutableDictionary();
+
         if (obsoleteAttribute is null)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttribute, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), properties));
             return;
         }
 
         if (obsoleteAttribute.ConstructorArguments.Length != 2)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), obsoleteAttribute.ConstructorArguments.Length));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties, obsoleteAttribute.ConstructorArguments.Length));
             return;
         }
 
         var obsoleteMessage = obsoleteAttribute.ConstructorArguments[0].Value?.ToString();
         var isError = (bool)(obsoleteAttribute.ConstructorArguments[1].Value ?? false);
 
-        var expectedObsoleteMessage = BuildMessage(assemblyVersion, message, replacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
-        var expectedIsError = treatAsErrorFromVersion is not null && assemblyVersion >= treatAsErrorFromVersion;
-
         if (obsoleteMessage != expectedObsoleteMessage)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
         }
 
         if (isError != expectedIsError)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference)));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
         }
     }
 
