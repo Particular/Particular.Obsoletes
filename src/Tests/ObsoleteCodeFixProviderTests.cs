@@ -19,7 +19,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         """;
 
         var expected = """
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
         public class Foo
         {
