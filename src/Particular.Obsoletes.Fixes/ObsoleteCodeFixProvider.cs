@@ -27,7 +27,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         diagnostic.Properties.TryGetValue("Message", out var message);
         diagnostic.Properties.TryGetValue("IsError", out var isError);
 
-        var codeAction = CodeAction.Create("", token => AddMissingObsolete(context.Document, diagnostic.Location, message, isError, token), "");
+        var codeAction = CodeAction.Create("Add missing Obsolete attribute", token => AddMissingObsolete(context.Document, diagnostic.Location, message, isError, token), "Foo");
 
         context.RegisterCodeFix(codeAction, diagnostic);
 
