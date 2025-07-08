@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-[ExportCodeFixProvider(LanguageNames.CSharp)]
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ObsoleteCodeFixProvider))]
 public class ObsoleteCodeFixProvider : CodeFixProvider
 {
     public override ImmutableArray<string> FixableDiagnosticIds =>
@@ -27,7 +27,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         diagnostic.Properties.TryGetValue("Message", out var message);
         diagnostic.Properties.TryGetValue("IsError", out var isError);
 
-        var codeAction = CodeAction.Create("Add missing Obsolete attribute", token => AddMissingObsolete(context.Document, diagnostic.Location, message, isError, token), "Foo");
+        var codeAction = CodeAction.Create("Add missing Obsolete attribute", token => AddMissingObsolete(context.Document, diagnostic.Location, message, isError, token), "Add missing Obsolete attribute");
 
         context.RegisterCodeFix(codeAction, diagnostic);
 
@@ -66,8 +66,6 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         var newRoot = root.ReplaceNode(member, result);
 
         var newDocument = document.WithSyntaxRoot(newRoot);
-
-        _ = isError;
 
         return newDocument;
     }

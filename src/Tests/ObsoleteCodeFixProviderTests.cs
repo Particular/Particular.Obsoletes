@@ -8,7 +8,7 @@ using Tests.Helpers;
 public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer, ObsoleteCodeFixProvider>
 {
     [Test]
-    public Task MissingObsolete()
+    public Task MissingObsolete1()
     {
         var original = """
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
@@ -26,6 +26,31 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
 
         }
         """;
+
+        return Assert(original, expected);
+    }
+
+    [Test]
+    public Task MissingObsolete2()
+    {
+        var original = """
+     [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
+     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+     public class Foo
+     {
+
+     }
+     """;
+
+        var expected = """
+     [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
+     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+     [Obsolete("Will be removed in version 3.0.0.", true)]
+     public class Foo
+     {
+
+     }
+     """;
 
         return Assert(original, expected);
     }
