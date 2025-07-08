@@ -1,5 +1,6 @@
 ﻿namespace Particular.Obsoletes;
 
+using System;
 using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -191,6 +192,23 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         var assemblyVersion = context.Compilation.Assembly.Identity.Version;
 
+        if (assemblyVersion.Major == 1)
+        {
+            var assemblyMetadataAttributeType = context.Compilation.GetTypeByMetadataName("System.Reflection.AssemblyMetadataAttribute");
+            var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
+
+            foreach (var assemblyAttribute in assemblyAttributes)
+            {
+                if (SymbolEqualityComparer.Default.Equals(assemblyAttribute.AttributeClass, assemblyMetadataAttributeType) && assemblyAttribute.ConstructorArguments.Length == 2)
+                {
+                    if (assemblyAttribute.ConstructorArguments[0].Value?.ToString() == "MajorMinorPatch" && assemblyAttribute.ConstructorArguments[1].Value?.ToString() == "..")
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+
         if (assemblyVersion >= removeInVersion)
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), assemblyVersion, removeInVersion));
@@ -203,7 +221,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         var properties = new Dictionary<string, string?>
         {
             { "Message", expectedObsoleteMessage },
-            { "IsError ", expectedIsError.ToString() },
+            { "IsError", expectedIsError.ToString() },
         }.ToImmutableDictionary();
 
         if (obsoleteAttribute is null)
