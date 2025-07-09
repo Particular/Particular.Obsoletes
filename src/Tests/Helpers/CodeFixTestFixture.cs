@@ -13,9 +13,6 @@ public abstract class CodeFixTestFixture<TAnalyzer, TCodeFix> : AnalyzerTestFixt
 {
     protected virtual async Task Assert(string original, string expected, bool fixMustCompile = true, CancellationToken cancellationToken = default)
     {
-        original = AddUsings(original);
-        expected = AddUsings(expected);
-
         var originalCodeFiles = SplitMarkupCodeIntoFiles(original);
         var expectedCodeFiles = SplitMarkupCodeIntoFiles(expected);
 

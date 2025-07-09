@@ -11,6 +11,11 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     public Task MissingObsolete1()
     {
         var original = """
+        namespace Blah;
+
+        using System;
+        using Particular.Obsoletes;
+
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         public class Foo
         {
@@ -19,6 +24,11 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         """;
 
         var expected = """
+        namespace Blah;
+
+        using System;
+        using Particular.Obsoletes;
+
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
         public class Foo
@@ -34,6 +44,9 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     public Task MissingObsolete2()
     {
         var original = """
+     using System;
+     using Particular.Obsoletes;
+
      [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
      [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
      public class Foo
@@ -43,6 +56,9 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
      """;
 
         var expected = """
+     using System;
+     using Particular.Obsoletes;
+
      [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
      [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
      [Obsolete("Will be removed in version 3.0.0.", true)]

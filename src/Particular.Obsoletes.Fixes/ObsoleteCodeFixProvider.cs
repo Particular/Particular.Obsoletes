@@ -4,8 +4,8 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ObsoleteCodeFixProvider))]
 public class ObsoleteCodeFixProvider : CodeFixProvider
@@ -27,43 +27,78 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         diagnostic.Properties.TryGetValue("Message", out var message);
         diagnostic.Properties.TryGetValue("IsError", out var isError);
 
-        var codeAction = CodeAction.Create("Add missing Obsolete attribute", token => AddMissingObsolete(context.Document, diagnostic.Location, message, isError, token), "Add missing Obsolete attribute");
+        var codeAction = CodeAction.Create("Add missing Obsolete attribute", token => AddMissingObsolete(context.Document, diagnostic.Location, message ?? string.Empty, isError ?? string.Empty, token), "Add missing Obsolete attribute");
 
         context.RegisterCodeFix(codeAction, diagnostic);
 
         return Task.CompletedTask;
     }
 
-    static async Task<Document> AddMissingObsolete(Document document, Location location, string? message, string? isError, CancellationToken cancellationToken)
+    static async Task<Document> AddMissingObsolete(Document document, Location location, string message, string isError, CancellationToken cancellationToken)
     {
-        var name = SyntaxFactory.IdentifierName("Obsolete");
-
-        var messageExpression = SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(message));
-        var messageArgument = SyntaxFactory.AttributeArgument(messageExpression);
-
-        var isErrorLiteral = isError switch
-        {
-            "False" => SyntaxKind.FalseLiteralExpression,
-            "True" => SyntaxKind.TrueLiteralExpression,
-            _ => SyntaxKind.FalseLiteralExpression
-        };
-
-        var isErrorExpression = SyntaxFactory.LiteralExpression(isErrorLiteral);
-        var isErrorArgument = SyntaxFactory.AttributeArgument(isErrorExpression);
-
-        var attributeArgumentList = SyntaxFactory.AttributeArgumentList([messageArgument, isErrorArgument]);
-
-        var obsoleteAttribute = SyntaxFactory.Attribute(name, attributeArgumentList);
-
-        var attributeList = SyntaxFactory.AttributeList([obsoleteAttribute]);
-
         var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
-        var node = root.FindNode(location.SourceSpan);
-        var member = node.Parent.Parent as MemberDeclarationSyntax;
-        var result = member.AddAttributeLists(attributeList);
+        if (root is null)
+        {
+            return document;
+        }
 
-        var newRoot = root.ReplaceNode(member, result);
+        var obsoleteMetadataAttributeNode = root.FindNode(location.SourceSpan);
+
+        if (obsoleteMetadataAttributeNode.Parent?.Parent is not MemberDeclarationSyntax member)
+        {
+            return document;
+        }
+
+        var generator = SyntaxGenerator.GetGenerator(document);
+
+        var obsoleteAttributeNode = generator.Attribute("Obsolete", generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError))));
+
+        var newNode = generator.AddAttributes(member, obsoleteAttributeNode);
+        var newRoot = generator.ReplaceNode(root, member, newNode);
+
+
+        bool systemUsingDirectiveNeeded = true;
+        SyntaxNode? foo = member.Parent;
+
+        do
+        {
+            SyntaxList<UsingDirectiveSyntax>? usings = null;
+
+            if (foo is NamespaceDeclarationSyntax namespaceDeclaration)
+            {
+                usings = namespaceDeclaration.Usings;
+            }
+            else if (foo is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclaration)
+            {
+                usings = fileScopedNamespaceDeclaration.Usings;
+            }
+            else if (foo is CompilationUnitSyntax compilationUnit)
+            {
+                usings = compilationUnit.Usings;
+            }
+
+            if (usings is not null)
+            {
+                foreach (var usingDirective in usings)
+                {
+                    if (usingDirective is UsingDirectiveSyntax { Name: IdentifierNameSyntax { Identifier.Text: nameof(System) } })
+                    {
+                        systemUsingDirectiveNeeded = false;
+                        break;
+                    }
+                }
+            }
+
+            foo = foo?.Parent;
+
+        } while (systemUsingDirectiveNeeded && foo is not null);
+
+
+        if (systemUsingDirectiveNeeded)
+        {
+            newRoot = generator.AddNamespaceImports(newRoot, generator.NamespaceImportDeclaration(nameof(System)));
+        }
 
         var newDocument = document.WithSyntaxRoot(newRoot);
 
