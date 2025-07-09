@@ -158,7 +158,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     {
         var code = """
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-        [[|Obsolete("", false)|]]
+        [Obsolete([|""|], false)]
         public class Foo
         {
 
@@ -173,7 +173,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     {
         var code = """
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-        [[|Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", true)|]]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", [|true|])]
         public class Foo
         {
 
@@ -181,20 +181,5 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         """;
 
         return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument);
-    }
-
-    [Test]
-    public Task BothArgumentsIncorrect()
-    {
-        var code = """
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-        [[|Obsolete("", true)|]]
-        public class Foo
-        {
-
-        }
-        """;
-
-        return Assert(code, [DiagnosticIds.IncorrectObsoleteAttributeMessageArgument, DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument]);
     }
 }

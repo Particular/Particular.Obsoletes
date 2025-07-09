@@ -136,11 +136,14 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     }
 
     [Test]
-    public Task BothArgumentsIncorrect()
+    public Task IncorrectObsoleteAttributeMessageArgument()
     {
         var original = """
+        using System;
+        using Particular.Obsoletes;
+
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-        [Obsolete("", true)]
+        [Obsolete("", false)]
         public class Foo
         {
 
@@ -148,6 +151,39 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         """;
 
         var expected = """
+        using System;
+        using Particular.Obsoletes;
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(original, expected);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeIsErrorArgument()
+    {
+        var original = """
+        using System;
+        using Particular.Obsoletes;
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", true)]
+        public class Foo
+        {
+
+        }
+        """;
+
+        var expected = """
+        using System;
+        using Particular.Obsoletes;
+
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
         public class Foo

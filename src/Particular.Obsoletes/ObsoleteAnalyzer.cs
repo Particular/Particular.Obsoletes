@@ -83,12 +83,12 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
             if (obsoleteMetadata is not null || obsolete is not null)
             {
-                Analyze(context, member);
+                Analyze(context, member, obsolete?.ArgumentList?.Arguments);
             }
         }
     }
 
-    static void Analyze(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax memberDeclarationSyntax)
+    static void Analyze(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax memberDeclarationSyntax, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteArgumentsSyntaxList)
     {
         var symbol = context.SemanticModel.GetDeclaredSymbol(memberDeclarationSyntax);
 
@@ -241,12 +241,18 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (obsoleteMessage != expectedObsoleteMessage)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
+            var blah = obsoleteArgumentsSyntaxList.Value[0];
+            var location = Location.Create(blah.SyntaxTree, blah.Span);
+
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, location, properties));
         }
 
         if (isError != expectedIsError)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
+            var blah = obsoleteArgumentsSyntaxList.Value[1];
+            var location = Location.Create(blah.SyntaxTree, blah.Span);
+
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, location, properties));
         }
     }
 

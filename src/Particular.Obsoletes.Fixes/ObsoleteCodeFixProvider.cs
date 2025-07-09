@@ -43,6 +43,22 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
+            else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeMessageArgument)
+            {
+                diagnostic.Properties.TryGetValue("Message", out var message);
+
+                var codeAction = CodeAction.Create("Fix incorrect message argument", token => FixIncorrectObsoleteAttributeMessageArgument(context.Document, diagnostic.Location, message ?? string.Empty, token), "Fix incorrect message argument");
+
+                context.RegisterCodeFix(codeAction, diagnostic);
+            }
+            else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument)
+            {
+                diagnostic.Properties.TryGetValue("IsError", out var isError);
+
+                var codeAction = CodeAction.Create("Fix incorrect isError argument", token => FixIncorrectObsoleteAttributeIsErrorArgument(context.Document, diagnostic.Location, isError ?? string.Empty, token), "Fix incorrect isError argument");
+
+                context.RegisterCodeFix(codeAction, diagnostic);
+            }
         }
 
         return Task.CompletedTask;
@@ -110,6 +126,48 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         var obsoleteAttributeNode = generator.Attribute(obsoleteAttributeTypeNode, [generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError)))]);
 
         var newRoot = generator.ReplaceNode(root, original, obsoleteAttributeNode);
+        var newDocument = document.WithSyntaxRoot(newRoot);
+
+        return newDocument;
+    }
+
+    static async Task<Document> FixIncorrectObsoleteAttributeMessageArgument(Document document, Location location, string message, CancellationToken cancellationToken)
+    {
+        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
+        {
+            return document;
+        }
+
+        if (root.FindNode(location.SourceSpan) is not AttributeArgumentSyntax original)
+        {
+            return document;
+        }
+
+        var generator = SyntaxGenerator.GetGenerator(document);
+
+        var newArgument = generator.AttributeArgument(generator.LiteralExpression(message));
+        var newRoot = generator.ReplaceNode(root, original, newArgument);
+        var newDocument = document.WithSyntaxRoot(newRoot);
+
+        return newDocument;
+    }
+
+    static async Task<Document> FixIncorrectObsoleteAttributeIsErrorArgument(Document document, Location location, string isError, CancellationToken cancellationToken)
+    {
+        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
+        {
+            return document;
+        }
+
+        if (root.FindNode(location.SourceSpan) is not AttributeArgumentSyntax original)
+        {
+            return document;
+        }
+
+        var generator = SyntaxGenerator.GetGenerator(document);
+
+        var newArgument = generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError)));
+        var newRoot = generator.ReplaceNode(root, original, newArgument);
         var newDocument = document.WithSyntaxRoot(newRoot);
 
         return newDocument;
