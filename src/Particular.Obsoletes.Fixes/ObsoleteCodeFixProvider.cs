@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Simplification;
 
@@ -42,9 +41,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
             return document;
         }
 
-        var obsoleteMetadataAttributeNode = root.FindNode(location.SourceSpan);
-
-        if (obsoleteMetadataAttributeNode.Parent?.Parent is not MemberDeclarationSyntax member)
+        if (root.FindNode(location.SourceSpan) is not SyntaxNode { Parent.Parent: SyntaxNode member })
         {
             return document;
         }
@@ -70,5 +67,4 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
         return newDocument;
     }
-
 }
