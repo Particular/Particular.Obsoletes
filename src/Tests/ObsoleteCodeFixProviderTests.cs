@@ -11,10 +11,11 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     public Task MissingObsolete1()
     {
         var original = """
+        using Particular.Obsoletes;
+
         namespace Blah;
 
-        using System;
-        using Particular.Obsoletes;
+        using System.Runtime;
 
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         public class Foo
@@ -24,10 +25,12 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         """;
 
         var expected = """
+        using Particular.Obsoletes;
+
         namespace Blah;
 
         using System;
-        using Particular.Obsoletes;
+        using System.Runtime;
 
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]

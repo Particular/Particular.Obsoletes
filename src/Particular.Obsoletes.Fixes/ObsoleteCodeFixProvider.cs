@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Simplification;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ObsoleteCodeFixProvider))]
 public class ObsoleteCodeFixProvider : CodeFixProvider
@@ -36,9 +37,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
     static async Task<Document> AddMissingObsolete(Document document, Location location, string message, string isError, CancellationToken cancellationToken)
     {
-        var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-
-        if (root is null)
+        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
         {
             return document;
         }
@@ -50,56 +49,23 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
             return document;
         }
 
-        var generator = SyntaxGenerator.GetGenerator(document);
-
-        var obsoleteAttributeNode = generator.Attribute("Obsolete", generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError))));
-
-        var newNode = generator.AddAttributes(member, obsoleteAttributeNode);
-        var newRoot = generator.ReplaceNode(root, member, newNode);
-
-
-        bool systemUsingDirectiveNeeded = true;
-        SyntaxNode? foo = member.Parent;
-
-        do
+        if (await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false) is not SemanticModel semanticModel)
         {
-            SyntaxList<UsingDirectiveSyntax>? usings = null;
-
-            if (foo is NamespaceDeclarationSyntax namespaceDeclaration)
-            {
-                usings = namespaceDeclaration.Usings;
-            }
-            else if (foo is FileScopedNamespaceDeclarationSyntax fileScopedNamespaceDeclaration)
-            {
-                usings = fileScopedNamespaceDeclaration.Usings;
-            }
-            else if (foo is CompilationUnitSyntax compilationUnit)
-            {
-                usings = compilationUnit.Usings;
-            }
-
-            if (usings is not null)
-            {
-                foreach (var usingDirective in usings)
-                {
-                    if (usingDirective is UsingDirectiveSyntax { Name: IdentifierNameSyntax { Identifier.Text: nameof(System) } })
-                    {
-                        systemUsingDirectiveNeeded = false;
-                        break;
-                    }
-                }
-            }
-
-            foo = foo?.Parent;
-
-        } while (systemUsingDirectiveNeeded && foo is not null);
-
-
-        if (systemUsingDirectiveNeeded)
-        {
-            newRoot = generator.AddNamespaceImports(newRoot, generator.NamespaceImportDeclaration(nameof(System)));
+            return document;
         }
 
+        if (semanticModel.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute") is not INamedTypeSymbol obsoleteAttributeTypeSymbol)
+        {
+            return document;
+        }
+
+        var generator = SyntaxGenerator.GetGenerator(document);
+
+        var obsoleteAttributeTypeNode = generator.TypeExpression(obsoleteAttributeTypeSymbol).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
+        var obsoleteAttributeNode = generator.Attribute(obsoleteAttributeTypeNode, [generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError)))]);
+
+        var newMemberNode = generator.AddAttributes(member, obsoleteAttributeNode);
+        var newRoot = generator.ReplaceNode(root, member, newMemberNode);
         var newDocument = document.WithSyntaxRoot(newRoot);
 
         return newDocument;
