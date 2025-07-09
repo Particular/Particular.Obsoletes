@@ -74,6 +74,67 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         return Assert(original, expected);
     }
 
+
+    [Test]
+    public Task MissingConstructorArguments1()
+    {
+        var original = """
+        using System;
+        using Particular.Obsoletes;
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete]
+        public class Foo
+        {
+
+        }
+        """;
+
+        var expected = """
+        using System;
+        using Particular.Obsoletes;
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(original, expected);
+    }
+
+    [Test]
+    public Task MissingConstructorArguments2()
+    {
+        var original = """
+     using System;
+     using Particular.Obsoletes;
+
+     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+     [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.")]
+     public class Foo
+     {
+
+     }
+     """;
+
+        var expected = """
+     using System;
+     using Particular.Obsoletes;
+
+     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+     [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
+     public class Foo
+     {
+
+     }
+     """;
+
+        return Assert(original, expected);
+    }
+
     [Test]
     public Task BothArgumentsIncorrect()
     {
