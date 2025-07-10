@@ -127,7 +127,11 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         return newDocument;
     }
 
-    static async Task<Document> FixIncorrectObsoleteAttributeMessageArgument(Document document, Location location, string message, CancellationToken cancellationToken)
+    static Task<Document> FixIncorrectObsoleteAttributeMessageArgument(Document document, Location location, string message, CancellationToken cancellationToken) => FixIncorrectObsoleteAttributeArgument(document, location, generator => generator.LiteralExpression(message), cancellationToken);
+
+    static Task<Document> FixIncorrectObsoleteAttributeIsErrorArgument(Document document, Location location, string isError, CancellationToken cancellationToken) => FixIncorrectObsoleteAttributeArgument(document, location, generator => generator.LiteralExpression(bool.Parse(isError)), cancellationToken);
+
+    static async Task<Document> FixIncorrectObsoleteAttributeArgument(Document document, Location location, Func<SyntaxGenerator, SyntaxNode> literalExpression, CancellationToken cancellationToken)
     {
         if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
         {
@@ -141,28 +145,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
         var generator = SyntaxGenerator.GetGenerator(document);
 
-        var newArgument = generator.AttributeArgument(generator.LiteralExpression(message));
-        var newRoot = generator.ReplaceNode(root, original, newArgument);
-        var newDocument = document.WithSyntaxRoot(newRoot);
-
-        return newDocument;
-    }
-
-    static async Task<Document> FixIncorrectObsoleteAttributeIsErrorArgument(Document document, Location location, string isError, CancellationToken cancellationToken)
-    {
-        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
-        {
-            return document;
-        }
-
-        if (root.FindNode(location.SourceSpan) is not AttributeArgumentSyntax original)
-        {
-            return document;
-        }
-
-        var generator = SyntaxGenerator.GetGenerator(document);
-
-        var newArgument = generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError)));
+        var newArgument = generator.AttributeArgument(literalExpression(generator));
         var newRoot = generator.ReplaceNode(root, original, newArgument);
         var newDocument = document.WithSyntaxRoot(newRoot);
 
