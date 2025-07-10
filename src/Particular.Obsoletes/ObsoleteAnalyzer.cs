@@ -96,23 +96,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var obsoleteMetadataAttributeType = context.Compilation.GetTypeByMetadataName("Particular.Obsoletes.ObsoleteMetadataAttribute");
-        var obsoleteAttributeType = context.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
-
-        AttributeData? obsoleteMetadataAttribute = null;
-        AttributeData? obsoleteAttribute = null;
-
-        foreach (var attribute in symbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteMetadataAttributeType))
-            {
-                obsoleteMetadataAttribute = attribute;
-            }
-            else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteAttributeType))
-            {
-                obsoleteAttribute = attribute;
-            }
-        }
+        var (obsoleteMetadataAttribute, obsoleteAttribute) = GetAttributeData(context, symbol);
 
         if (obsoleteMetadataAttribute is null)
         {
@@ -249,6 +233,29 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
         }
+    }
+
+    static (AttributeData? obsoleteMetadataAttribute, AttributeData? obsoleteAttribute) GetAttributeData(SyntaxNodeAnalysisContext context, ISymbol symbol)
+    {
+        AttributeData? obsoleteMetadataAttribute = null;
+        AttributeData? obsoleteAttribute = null;
+
+        var obsoleteMetadataAttributeType = context.Compilation.GetTypeByMetadataName("Particular.Obsoletes.ObsoleteMetadataAttribute");
+        var obsoleteAttributeType = context.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+
+        foreach (var attribute in symbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteMetadataAttributeType))
+            {
+                obsoleteMetadataAttribute = attribute;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteAttributeType))
+            {
+                obsoleteAttribute = attribute;
+            }
+        }
+
+        return (obsoleteMetadataAttribute, obsoleteAttribute);
     }
 
     static Location CreateLocation(SyntaxReference? syntaxReference) => CreateLocation(syntaxReference?.SyntaxTree, syntaxReference?.Span);
