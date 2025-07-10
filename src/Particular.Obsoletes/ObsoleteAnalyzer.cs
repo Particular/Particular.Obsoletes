@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class ObsoleteAnalyzer : DiagnosticAnalyzer
@@ -83,16 +84,14 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
             if (obsoleteMetadata is not null || obsolete is not null)
             {
-                Analyze(context, member, obsolete?.ArgumentList?.Arguments);
+                Analyze(context, member, obsoleteMetadata?.ArgumentList?.Arguments, obsolete?.ArgumentList?.Arguments);
             }
         }
     }
 
-    static void Analyze(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax memberDeclarationSyntax, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteArgumentsSyntaxList)
+    static void Analyze(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax memberDeclarationSyntax, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteMetadataAttributeArguments, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteAttributeArguments)
     {
-        var symbol = context.SemanticModel.GetDeclaredSymbol(memberDeclarationSyntax);
-
-        if (symbol is null)
+        if (context.SemanticModel.GetDeclaredSymbol(memberDeclarationSyntax) is not ISymbol symbol)
         {
             return;
         }
@@ -171,12 +170,14 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (!TryParseVersion(treatAsErrorFromVersionValue, out var treatAsErrorFromVersion))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), treatAsErrorFromVersionValue));
+            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, "TreatAsErrorFromVersion");
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(attributeArgument), treatAsErrorFromVersionValue));
         }
 
         if (!TryParseVersion(removeInVersionValue, out var removeInVersion))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), removeInVersionValue));
+            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, "RemoveInVersion");
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(attributeArgument), removeInVersionValue));
         }
 
         if (treatAsErrorFromVersion is null || removeInVersion is null)
@@ -211,7 +212,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (assemblyVersion >= removeInVersion)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), assemblyVersion, removeInVersion));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(memberDeclarationSyntax.SyntaxTree, memberDeclarationSyntax.Span), assemblyVersion, removeInVersion));
             return;
         }
 
@@ -241,32 +242,29 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (obsoleteMessage != expectedObsoleteMessage)
         {
-            var blah = obsoleteArgumentsSyntaxList.Value[0];
-            var location = Location.Create(blah.SyntaxTree, blah.Span);
-
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, location, properties));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, CreateLocation(obsoleteAttributeArguments?[0]), properties));
         }
 
         if (isError != expectedIsError)
         {
-            var blah = obsoleteArgumentsSyntaxList.Value[1];
-            var location = Location.Create(blah.SyntaxTree, blah.Span);
-
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, location, properties));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
         }
     }
 
-    static Location? CreateLocation(SyntaxReference? syntaxReference)
-    {
-        Location? location = null;
+    static Location CreateLocation(SyntaxReference? syntaxReference) => CreateLocation(syntaxReference?.SyntaxTree, syntaxReference?.Span);
 
-        if (syntaxReference is not null)
+    static Location CreateLocation(AttributeArgumentSyntax? attributeArgumentSyntax) => CreateLocation(attributeArgumentSyntax?.SyntaxTree, attributeArgumentSyntax?.Span);
+
+    static Location CreateLocation(SyntaxTree? syntaxTree, TextSpan? textSpan)
+    {
+        var location = Location.None;
+
+        if (syntaxTree is not null && textSpan is not null)
         {
-            location = Location.Create(syntaxReference.SyntaxTree, syntaxReference.Span);
+            location = Location.Create(syntaxTree, textSpan.Value);
         }
 
         return location;
-
     }
 
     static bool TryParseVersion(string? input, out Version? result)
@@ -278,6 +276,25 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         }
 
         return Version.TryParse(input, out result);
+    }
+
+    static AttributeArgumentSyntax? GetAttributeArgument(SeparatedSyntaxList<AttributeArgumentSyntax>? attributeArguments, string argumentName)
+    {
+        AttributeArgumentSyntax? attributeArgument = null;
+
+        if (attributeArguments is not null)
+        {
+            foreach (var argument in attributeArguments)
+            {
+                if (argument.NameEquals?.Name.Identifier.ValueText == argumentName)
+                {
+                    attributeArgument = argument;
+                    break;
+                }
+            }
+        }
+
+        return attributeArgument;
     }
 
     static string BuildMessage(Version assemblyVersion, string? message, string? replacementTypeOrMember, Version treatAsErrorFromVersion, Version removeInVersion)

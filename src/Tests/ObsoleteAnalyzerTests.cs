@@ -70,7 +70,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task InvalidTreatAsErrorFromVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "not-a-version", RemoveInVersion = "3")|]]
+        [ObsoleteMetadata([|TreatAsErrorFromVersion = "not-a-version"|], RemoveInVersion = "3")]
         public class Foo
         {
 
@@ -84,7 +84,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task InvalidRemoveInVersion()
     {
         var code = """
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "not-a-version")|]]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", [|RemoveInVersion = "not-a-version"|])]
         public class Foo
         {
 
@@ -114,11 +114,11 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         var code = """
         [assembly: System.Reflection.AssemblyVersionAttribute("3.0.0.0")]
 
-        [[|ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")|]]
+        [|[ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         public class Foo
         {
 
-        }
+        }|]
         """;
 
         return Assert(code, DiagnosticIds.RemoveObsoleteMember);
