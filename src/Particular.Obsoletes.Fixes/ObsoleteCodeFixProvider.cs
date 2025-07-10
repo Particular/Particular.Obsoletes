@@ -25,38 +25,34 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
     {
         foreach (var diagnostic in context.Diagnostics)
         {
+            diagnostic.Properties.TryGetValue("Message", out var message);
+            diagnostic.Properties.TryGetValue("IsError", out var isError);
+
+            message ??= string.Empty;
+            isError ??= string.Empty;
+
             if (diagnostic.Id == DiagnosticIds.MissingObsoleteAttribute)
             {
-                diagnostic.Properties.TryGetValue("Message", out var message);
-                diagnostic.Properties.TryGetValue("IsError", out var isError);
-
-                var codeAction = CodeAction.Create("Add missing Obsolete attribute", token => AddMissingObsoleteAttribute(context.Document, diagnostic.Location, message ?? string.Empty, isError ?? string.Empty, token), "Add missing Obsolete attribute");
-
+                var title = "Add missing Obsolete attribute";
+                var codeAction = CodeAction.Create(title, token => AddMissingObsoleteAttribute(context.Document, diagnostic.Location, message, isError, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
             else if (diagnostic.Id == DiagnosticIds.ObsoleteAttributeMissingConstructorArguments)
             {
-                diagnostic.Properties.TryGetValue("Message", out var message);
-                diagnostic.Properties.TryGetValue("IsError", out var isError);
-
-                var codeAction = CodeAction.Create("Add missing constructor arguments", token => AddMissingConstructorArguments(context.Document, diagnostic.Location, message ?? string.Empty, isError ?? string.Empty, token), "Add missing constructor arguments");
-
+                var title = "Add missing constructor arguments";
+                var codeAction = CodeAction.Create(title, token => AddMissingConstructorArguments(context.Document, diagnostic.Location, message, isError, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
             else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeMessageArgument)
             {
-                diagnostic.Properties.TryGetValue("Message", out var message);
-
-                var codeAction = CodeAction.Create("Fix incorrect message argument", token => FixIncorrectObsoleteAttributeMessageArgument(context.Document, diagnostic.Location, message ?? string.Empty, token), "Fix incorrect message argument");
-
+                var title = "Fix incorrect message argument";
+                var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeMessageArgument(context.Document, diagnostic.Location, message, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
             else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument)
             {
-                diagnostic.Properties.TryGetValue("IsError", out var isError);
-
-                var codeAction = CodeAction.Create("Fix incorrect isError argument", token => FixIncorrectObsoleteAttributeIsErrorArgument(context.Document, diagnostic.Location, isError ?? string.Empty, token), "Fix incorrect isError argument");
-
+                var title = "Fix incorrect isError argument";
+                var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeIsErrorArgument(context.Document, diagnostic.Location, isError, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
         }
