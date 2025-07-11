@@ -6,15 +6,17 @@ static class DiagnosticIds
 public static class DiagnosticIds
 #endif
 {
-    public const string MissingObsoleteMetadataAttribute = "OBSOLETES0001";
-    public const string MissingObsoleteAttribute = "OBSOLETES0002";
-    public const string InvalidTreatAsErrorFromVersion = "OBSOLETES0003";
-    public const string RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion = "OBSOLETES0004";
-    public const string RemoveObsoleteMember = "OBSOLETES0005";
-    public const string ObsoleteAttributeMissingConstructorArguments = "OBSOLETES0006";
-    public const string IncorrectObsoleteAttributeMessageArgument = "OBSOLETES0007";
-    public const string IncorrectObsoleteAttributeIsErrorArgument = "OBSOLETES0008";
-    public const string MissingRemoveInVersion = "OBSOLETES0009";
-    public const string MissingTreatAsErrorFromVersion = "OBSOLETES0010";
-    public const string InvalidRemoveInVersion = "OBSOLETES0011";
+    const string Prefix = "OBSOLETES";
+
+    public const string MissingObsoleteMetadataAttribute = Prefix + "0001";
+    public const string MissingTreatAsErrorFromVersion = Prefix + "0002";
+    public const string MissingRemoveInVersion = Prefix + "0003";
+    public const string InvalidTreatAsErrorFromVersion = Prefix + "0004";
+    public const string InvalidRemoveInVersion = Prefix + "0005";
+    public const string RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion = Prefix + "0006";
+    public const string RemoveObsoleteMember = Prefix + "0007";
+    public const string MissingObsoleteAttribute = Prefix + "0008";
+    public const string ObsoleteAttributeMissingConstructorArguments = Prefix + "0009";
+    public const string IncorrectObsoleteAttributeMessageArgument = Prefix + "0010";
+    public const string IncorrectObsoleteAttributeIsErrorArgument = Prefix + "0011";
 }
