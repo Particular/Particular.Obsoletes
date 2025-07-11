@@ -128,13 +128,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (!TryParseVersion(values.TreatAsErrorFromVersion, out var treatAsErrorFromVersion))
         {
-            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, nameof(values.TreatAsErrorFromVersion));
+            var attributeArgument = GetAttributeArgumentSyntax(obsoleteMetadataAttributeArguments, nameof(values.TreatAsErrorFromVersion));
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(attributeArgument), values.TreatAsErrorFromVersion));
         }
 
         if (!TryParseVersion(values.RemoveInVersion, out var removeInVersion))
         {
-            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, nameof(values.RemoveInVersion));
+            var attributeArgument = GetAttributeArgumentSyntax(obsoleteMetadataAttributeArguments, nameof(values.RemoveInVersion));
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(attributeArgument), values.RemoveInVersion));
         }
 
@@ -252,7 +252,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         return new ObsoleteMetadataAttributeValues(message, treatAsErrorFromVersion, treatAsErrorFromVersionSet, removeInVersion, removeInVersionSet, replacementTypeOrMember);
     }
 
-    static AttributeArgumentSyntax? GetAttributeArgument(SeparatedSyntaxList<AttributeArgumentSyntax>? attributeArguments, string argumentName)
+    static AttributeArgumentSyntax? GetAttributeArgumentSyntax(SeparatedSyntaxList<AttributeArgumentSyntax>? attributeArguments, string argumentName)
     {
         AttributeArgumentSyntax? attributeArgument = null;
 
