@@ -17,8 +17,8 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         [
             SyntaxKind.ClassDeclaration,
             SyntaxKind.StructDeclaration,
-            SyntaxKind.InterfaceDeclaration,
             SyntaxKind.EnumDeclaration,
+            SyntaxKind.InterfaceDeclaration,
             SyntaxKind.ConstructorDeclaration,
             SyntaxKind.MethodDeclaration,
             SyntaxKind.PropertyDeclaration,
@@ -31,16 +31,16 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         [
             DiagnosticDescriptors.MissingObsoleteMetadataAttribute,
-            DiagnosticDescriptors.MissingObsoleteAttribute,
+            DiagnosticDescriptors.MissingTreatAsErrorFromVersion,
+            DiagnosticDescriptors.MissingRemoveInVersion,
             DiagnosticDescriptors.InvalidTreatAsErrorFromVersion,
             DiagnosticDescriptors.InvalidRemoveInVersion,
             DiagnosticDescriptors.RemoveInVersionLessThanOrEqualToTreatAsErrorFromVersion,
             DiagnosticDescriptors.RemoveObsoleteMember,
+            DiagnosticDescriptors.MissingObsoleteAttribute,
             DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments,
             DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument,
             DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument,
-            DiagnosticDescriptors.MissingTreatAsErrorFromVersion,
-            DiagnosticDescriptors.MissingRemoveInVersion
         ];
 
     public override void Initialize(AnalysisContext context)
