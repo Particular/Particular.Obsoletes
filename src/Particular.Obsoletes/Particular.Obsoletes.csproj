@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Description>Analyzers for use in Particular Software C# projects. Requires the latest versions of the .NET SDK and IDEs to function correctly.</Description>
+    <Description>An analyzer and code fix provider to manage Obsolete attributes in Particular Software C# projects</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IncludeBuildOutput>false</IncludeBuildOutput>
