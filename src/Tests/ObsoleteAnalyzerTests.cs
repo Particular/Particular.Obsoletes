@@ -322,7 +322,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     }
 
     [Test]
-    public Task IncorrectObsoleteAttributeIsErrorArgument()
+    public Task IncorrectObsoleteAttributeErrorArgument()
     {
         var code = """
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]

@@ -161,13 +161,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var expectedObsoleteMessage = BuildMessage(assemblyVersion, values.Message, values.ReplacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
-        var expectedIsError = assemblyVersion >= treatAsErrorFromVersion;
+        var expectedMessage = BuildMessage(assemblyVersion, values.Message, values.ReplacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
+        var expectedError = assemblyVersion >= treatAsErrorFromVersion;
 
         var properties = new Dictionary<string, string?>
         {
-            { "Message", expectedObsoleteMessage },
-            { "IsError", expectedIsError.ToString() },
+            { "Message", expectedMessage },
+            { "Error", expectedError.ToString() },
         }.ToImmutableDictionary();
 
         if (obsoleteAttribute is null)
@@ -182,15 +182,15 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var obsoleteMessage = obsoleteAttribute.ConstructorArguments[0].Value?.ToString();
-        var isError = (bool)(obsoleteAttribute.ConstructorArguments[1].Value ?? false);
+        var actualMessage = obsoleteAttribute.ConstructorArguments[0].Value?.ToString();
+        var actualError = (bool)(obsoleteAttribute.ConstructorArguments[1].Value ?? false);
 
-        if (obsoleteMessage != expectedObsoleteMessage)
+        if (actualMessage != expectedMessage)
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument, CreateLocation(obsoleteAttributeArguments?[0]), properties));
         }
 
-        if (isError != expectedIsError)
+        if (actualError != expectedError)
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
         }

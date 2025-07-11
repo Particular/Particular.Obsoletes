@@ -26,21 +26,21 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         foreach (var diagnostic in context.Diagnostics)
         {
             diagnostic.Properties.TryGetValue("Message", out var message);
-            diagnostic.Properties.TryGetValue("IsError", out var isError);
+            diagnostic.Properties.TryGetValue("Error", out var error);
 
             message ??= string.Empty;
-            isError ??= string.Empty;
+            error ??= string.Empty;
 
             if (diagnostic.Id == DiagnosticIds.MissingObsoleteAttribute)
             {
                 var title = "Add missing Obsolete attribute";
-                var codeAction = CodeAction.Create(title, token => AddMissingObsoleteAttribute(context.Document, diagnostic.Location, message, isError, token), title);
+                var codeAction = CodeAction.Create(title, token => AddMissingObsoleteAttribute(context.Document, diagnostic.Location, message, error, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
             else if (diagnostic.Id == DiagnosticIds.ObsoleteAttributeMissingConstructorArguments)
             {
-                var title = "Add missing constructor arguments";
-                var codeAction = CodeAction.Create(title, token => AddMissingConstructorArguments(context.Document, diagnostic.Location, message, isError, token), title);
+                var title = "Add missing attribute arguments";
+                var codeAction = CodeAction.Create(title, token => AddMissingConstructorArguments(context.Document, diagnostic.Location, message, error, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
             else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeMessageArgument)
@@ -51,8 +51,8 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
             }
             else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeErrorArgument)
             {
-                var title = "Fix incorrect isError argument";
-                var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeIsErrorArgument(context.Document, diagnostic.Location, isError, token), title);
+                var title = "Fix incorrect error argument";
+                var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeErrorArgument(context.Document, diagnostic.Location, error, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
         }
@@ -60,7 +60,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         return Task.CompletedTask;
     }
 
-    static async Task<Document> AddMissingObsoleteAttribute(Document document, Location location, string message, string isError, CancellationToken cancellationToken)
+    static async Task<Document> AddMissingObsoleteAttribute(Document document, Location location, string message, string error, CancellationToken cancellationToken)
     {
         if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
         {
@@ -85,7 +85,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         var generator = SyntaxGenerator.GetGenerator(document);
 
         var obsoleteAttributeTypeNode = generator.TypeExpression(obsoleteAttributeTypeSymbol).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
-        var obsoleteAttributeNode = generator.Attribute(obsoleteAttributeTypeNode, [generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError)))]);
+        var obsoleteAttributeNode = generator.Attribute(obsoleteAttributeTypeNode, [generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(error)))]);
 
         var newMemberNode = generator.AddAttributes(member, obsoleteAttributeNode);
         var newRoot = generator.ReplaceNode(root, member, newMemberNode);
@@ -94,7 +94,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         return newDocument;
     }
 
-    static async Task<Document> AddMissingConstructorArguments(Document document, Location location, string message, string isError, CancellationToken cancellationToken)
+    static async Task<Document> AddMissingConstructorArguments(Document document, Location location, string message, string error, CancellationToken cancellationToken)
     {
         if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
         {
@@ -119,7 +119,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
         var generator = SyntaxGenerator.GetGenerator(document);
 
         var obsoleteAttributeTypeNode = generator.TypeExpression(obsoleteAttributeTypeSymbol).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
-        var obsoleteAttributeNode = generator.Attribute(obsoleteAttributeTypeNode, [generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(isError)))]);
+        var obsoleteAttributeNode = generator.Attribute(obsoleteAttributeTypeNode, [generator.AttributeArgument(generator.LiteralExpression(message)), generator.AttributeArgument(generator.LiteralExpression(bool.Parse(error)))]);
 
         var newRoot = generator.ReplaceNode(root, original, obsoleteAttributeNode);
         var newDocument = document.WithSyntaxRoot(newRoot);
@@ -129,7 +129,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
     static Task<Document> FixIncorrectObsoleteAttributeMessageArgument(Document document, Location location, string message, CancellationToken cancellationToken) => FixIncorrectObsoleteAttributeArgument(document, location, generator => generator.LiteralExpression(message), cancellationToken);
 
-    static Task<Document> FixIncorrectObsoleteAttributeIsErrorArgument(Document document, Location location, string isError, CancellationToken cancellationToken) => FixIncorrectObsoleteAttributeArgument(document, location, generator => generator.LiteralExpression(bool.Parse(isError)), cancellationToken);
+    static Task<Document> FixIncorrectObsoleteAttributeErrorArgument(Document document, Location location, string error, CancellationToken cancellationToken) => FixIncorrectObsoleteAttributeArgument(document, location, generator => generator.LiteralExpression(bool.Parse(error)), cancellationToken);
 
     static async Task<Document> FixIncorrectObsoleteAttributeArgument(Document document, Location location, Func<SyntaxGenerator, SyntaxNode> literalExpression, CancellationToken cancellationToken)
     {

@@ -166,7 +166,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     }
 
     [Test]
-    public Task IncorrectObsoleteAttributeIsErrorArgument()
+    public Task IncorrectObsoleteAttributeErrorArgument()
     {
         var original = """
         using System;
