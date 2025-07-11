@@ -38,7 +38,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             DiagnosticDescriptors.RemoveObsoleteMember,
             DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments,
             DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument,
-            DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument,
+            DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument,
             DiagnosticDescriptors.MissingTreatAsErrorFromVersion,
             DiagnosticDescriptors.MissingRemoveInVersion
         ];
@@ -192,7 +192,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (isError != expectedIsError)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeIsErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
         }
     }
 

@@ -18,5 +18,5 @@ public static class DiagnosticIds
     public const string MissingObsoleteAttribute = Prefix + "0008";
     public const string ObsoleteAttributeMissingConstructorArguments = Prefix + "0009";
     public const string IncorrectObsoleteAttributeMessageArgument = Prefix + "0010";
-    public const string IncorrectObsoleteAttributeIsErrorArgument = Prefix + "0011";
+    public const string IncorrectObsoleteAttributeErrorArgument = Prefix + "0011";
 }

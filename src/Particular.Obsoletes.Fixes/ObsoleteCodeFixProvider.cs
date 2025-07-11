@@ -16,7 +16,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
             DiagnosticIds.MissingObsoleteAttribute,
             DiagnosticIds.ObsoleteAttributeMissingConstructorArguments,
             DiagnosticIds.IncorrectObsoleteAttributeMessageArgument,
-            DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument
+            DiagnosticIds.IncorrectObsoleteAttributeErrorArgument
         ];
 
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
@@ -49,7 +49,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
                 var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeMessageArgument(context.Document, diagnostic.Location, message, token), title);
                 context.RegisterCodeFix(codeAction, diagnostic);
             }
-            else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument)
+            else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeErrorArgument)
             {
                 var title = "Fix incorrect isError argument";
                 var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeIsErrorArgument(context.Document, diagnostic.Location, isError, token), title);

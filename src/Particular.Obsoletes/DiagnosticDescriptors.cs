@@ -7,7 +7,7 @@ public static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor MissingObsoleteMetadataAttribute = new(
         id: DiagnosticIds.MissingObsoleteMetadataAttribute,
         title: "Obsolete attributes should have a corresponding ObsoleteMetadata attribute",
-        messageFormat: "Add an ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute does not have a corresponding ObsoleteMetadata attribute",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -15,15 +15,15 @@ public static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor MissingTreatAsErrorFromVersion = new(
         id: DiagnosticIds.MissingTreatAsErrorFromVersion,
         title: "TreatAsErrorFromVersion should be specified",
-        messageFormat: "TreatAsErrorFromVersion is required but it has not been specified",
+        messageFormat: "The TreatAsErrorFromVersion argument is required but it has not been specified",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor MissingRemoveInVersion = new(
         id: DiagnosticIds.MissingRemoveInVersion,
-        title: "RemoveInVersion properties should be specified",
-        messageFormat: "RemoveInVersion is required but it has not been specified",
+        title: "RemoveInVersion should be specified",
+        messageFormat: "The RemoveInVersion argument is required but it has not been specified",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -63,31 +63,31 @@ public static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor MissingObsoleteAttribute = new(
         id: DiagnosticIds.MissingObsoleteAttribute,
         title: "ObsoleteMetadata attributes should have a corresponding Obsolete attribute",
-        messageFormat: "Add an Obsolete attribute",
+        messageFormat: "The ObsoleteMetadata attribute does not have a corresponding Obsolete attribute",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor ObsoleteAttributeMissingConstructorArguments = new(
         id: DiagnosticIds.ObsoleteAttributeMissingConstructorArguments,
-        title: "Obsolete attributes should have two constructor arguments",
-        messageFormat: "Obsolete attribute should have two constructor arguments but has {0}",
+        title: "Obsolete attributes should specify message and error arguments",
+        messageFormat: "The Obsolete attribute does not use the overload that provides both message and error arguments",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeMessageArgument = new(
         id: DiagnosticIds.IncorrectObsoleteAttributeMessageArgument,
-        title: "Obsolete attributes should have a message that matches the ObsoleteMetadata attribute",
-        messageFormat: "Fix the Obsolete message",
+        title: "Obsolete attributes should have a message value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute's message value does not match the information specified in the ObsoleteMetadata attribute",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeIsErrorArgument = new(
-        id: DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument,
-        title: "Obsolete attributes should have an isError that matches the ObsoleteMetadata attribute",
-        messageFormat: "Fix the Obsolete isError",
+    public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeErrorArgument = new(
+        id: DiagnosticIds.IncorrectObsoleteAttributeErrorArgument,
+        title: "Obsolete attributes should have an error value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute's error value does not match the information specified in the ObsoleteMetadata attribute",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

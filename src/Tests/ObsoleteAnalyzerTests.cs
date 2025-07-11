@@ -333,6 +333,6 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         }
         """;
 
-        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeIsErrorArgument);
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeErrorArgument);
     }
 }
