@@ -24,6 +24,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             SyntaxKind.PropertyDeclaration,
             SyntaxKind.FieldDeclaration,
             SyntaxKind.EventDeclaration,
+            SyntaxKind.EventFieldDeclaration,
             SyntaxKind.DelegateDeclaration
         ];
 
@@ -85,19 +86,19 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
             if (obsoleteMetadata is not null || obsolete is not null)
             {
-                Analyze(context, member, obsoleteMetadata?.ArgumentList?.Arguments, obsolete?.ArgumentList?.Arguments);
+                Analyze(context, obsoleteMetadata?.ArgumentList?.Arguments, obsolete?.ArgumentList?.Arguments);
             }
         }
     }
 
-    static void Analyze(SyntaxNodeAnalysisContext context, MemberDeclarationSyntax memberDeclarationSyntax, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteMetadataAttributeArguments, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteAttributeArguments)
+    static void Analyze(SyntaxNodeAnalysisContext context, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteMetadataAttributeArguments, SeparatedSyntaxList<AttributeArgumentSyntax>? obsoleteAttributeArguments)
     {
-        if (context.SemanticModel.GetDeclaredSymbol(memberDeclarationSyntax) is not ISymbol symbol)
+        if (context.ContainingSymbol is null)
         {
             return;
         }
 
-        var (obsoleteMetadataAttribute, obsoleteAttribute) = GetAttributeData(context, symbol);
+        var (obsoleteMetadataAttribute, obsoleteAttribute) = GetAttributeData(context.Compilation, context.ContainingSymbol);
 
         if (obsoleteMetadataAttribute is null)
         {
@@ -156,7 +157,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (assemblyVersion >= removeInVersion)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(memberDeclarationSyntax.SyntaxTree, memberDeclarationSyntax.Span), assemblyVersion, removeInVersion));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RemoveObsoleteMember, CreateLocation(context.Node.SyntaxTree, context.Node.Span), assemblyVersion, removeInVersion));
             return;
         }
 
@@ -195,13 +196,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    static (AttributeData? obsoleteMetadataAttribute, AttributeData? obsoleteAttribute) GetAttributeData(SyntaxNodeAnalysisContext context, ISymbol symbol)
+    static (AttributeData? obsoleteMetadataAttribute, AttributeData? obsoleteAttribute) GetAttributeData(Compilation compilation, ISymbol symbol)
     {
         AttributeData? obsoleteMetadataAttribute = null;
         AttributeData? obsoleteAttribute = null;
 
-        var obsoleteMetadataAttributeType = context.Compilation.GetTypeByMetadataName("Particular.Obsoletes.ObsoleteMetadataAttribute");
-        var obsoleteAttributeType = context.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+        var obsoleteMetadataAttributeType = compilation.GetTypeByMetadataName("Particular.Obsoletes.ObsoleteMetadataAttribute");
+        var obsoleteAttributeType = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
 
         foreach (var attribute in symbol.GetAttributes())
         {

@@ -39,6 +39,159 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     }
 
     [Test]
+    public Task MissingObsoleteMetadata2()
+    {
+        var code = """
+
+         public class Foo
+         {
+            [[|Obsolete|]]
+            public void Method() {}
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata3()
+    {
+        var code = """
+
+         public class Foo
+         {
+            [[|Obsolete|]]
+            public int Property { get; set; }
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+
+    [Test]
+    public Task MissingObsoleteMetadata4()
+    {
+        var code = """
+
+         public class Foo
+         {
+            [[|Obsolete|]]
+            public int Field = 42;
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata5()
+    {
+        var code = """
+
+         public class Foo
+         {
+            [[|Obsolete|]]
+            public delegate void Delegate(int Value);
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata6()
+    {
+        var code = """
+
+         public class Foo
+         {
+            [[|Obsolete|]]
+            public event EventHandler<EventArgs> Event;
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata7()
+    {
+        var code = """
+
+         public class Foo
+         {
+            [[|Obsolete|]]
+            public Foo() { }
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata8()
+    {
+        var code = """
+         [[|Obsolete|]]
+         public struct Foo
+         {
+
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata9()
+    {
+        var code = """
+         [[|Obsolete|]]
+         public interface Foo
+         {
+
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata10()
+    {
+        var code = """
+         [[|Obsolete|]]
+         public enum Foo
+         {
+
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
+    public Task MissingObsoleteMetadata11()
+    {
+        var code = """
+         public class Foo
+         {
+            [[|Obsolete|]]
+         	public event EventHandler<EventArgs> Event
+         	{
+         		add { eventHandler += value; }
+         		remove { eventHandler -= value; }
+         	}
+
+         	EventHandler<EventArgs> eventHandler;
+         }
+         """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteMetadataAttribute);
+    }
+
+    [Test]
     public Task MissingTreatAsErrorFromVersion()
     {
         var code = """
