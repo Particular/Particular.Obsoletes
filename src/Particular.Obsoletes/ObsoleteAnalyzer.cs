@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -108,60 +109,33 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        string? message = null;
-        string? treatAsErrorFromVersionValue = null;
-        bool treatAsErrorFromVersionSet = false;
-        string? removeInVersionValue = null;
-        bool removeInVersionSet = false;
-        string? replacementTypeOrMember = null;
+        var values = GetObsoleteMetadataAttributeValues(obsoleteMetadataAttribute);
 
-        foreach (var argument in obsoleteMetadataAttribute.NamedArguments)
+        if (!values.TreatAsErrorFromVersionSet)
         {
-            if (argument.Key == "Message")
-            {
-                message = argument.Value.Value?.ToString();
-            }
-            else if (argument.Key == "TreatAsErrorFromVersion")
-            {
-                treatAsErrorFromVersionValue = argument.Value.Value?.ToString();
-                treatAsErrorFromVersionSet = true;
-            }
-            else if (argument.Key == "RemoveInVersion")
-            {
-                removeInVersionValue = argument.Value.Value?.ToString();
-                removeInVersionSet = true;
-            }
-            else if (argument.Key == "ReplacementTypeOrMember")
-            {
-                replacementTypeOrMember = argument.Value.Value?.ToString();
-            }
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), values.TreatAsErrorFromVersion));
         }
 
-        if (!treatAsErrorFromVersionSet)
+        if (!values.RemoveInVersionSet)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), treatAsErrorFromVersionValue));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), values.RemoveInVersion));
         }
 
-        if (!removeInVersionSet)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), removeInVersionValue));
-        }
-
-        if (!treatAsErrorFromVersionSet || !removeInVersionSet)
+        if (!values.TreatAsErrorFromVersionSet || !values.RemoveInVersionSet)
         {
             return;
         }
 
-        if (!TryParseVersion(treatAsErrorFromVersionValue, out var treatAsErrorFromVersion))
+        if (!TryParseVersion(values.TreatAsErrorFromVersion, out var treatAsErrorFromVersion))
         {
-            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, "TreatAsErrorFromVersion");
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(attributeArgument), treatAsErrorFromVersionValue));
+            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, nameof(values.TreatAsErrorFromVersion));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidTreatAsErrorFromVersion, CreateLocation(attributeArgument), values.TreatAsErrorFromVersion));
         }
 
-        if (!TryParseVersion(removeInVersionValue, out var removeInVersion))
+        if (!TryParseVersion(values.RemoveInVersion, out var removeInVersion))
         {
-            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, "RemoveInVersion");
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(attributeArgument), removeInVersionValue));
+            var attributeArgument = GetAttributeArgument(obsoleteMetadataAttributeArguments, nameof(values.RemoveInVersion));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRemoveInVersion, CreateLocation(attributeArgument), values.RemoveInVersion));
         }
 
         if (treatAsErrorFromVersion is null || removeInVersion is null)
@@ -175,23 +149,9 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var assemblyVersion = context.Compilation.Assembly.Identity.Version;
-
-        if (assemblyVersion.Major == 1)
+        if (!TryGetAssemblyVersion(context.Compilation, out var assemblyVersion))
         {
-            var assemblyMetadataAttributeType = context.Compilation.GetTypeByMetadataName("System.Reflection.AssemblyMetadataAttribute");
-            var assemblyAttributes = context.Compilation.Assembly.GetAttributes();
-
-            foreach (var assemblyAttribute in assemblyAttributes)
-            {
-                if (SymbolEqualityComparer.Default.Equals(assemblyAttribute.AttributeClass, assemblyMetadataAttributeType) && assemblyAttribute.ConstructorArguments.Length == 2)
-                {
-                    if (assemblyAttribute.ConstructorArguments[0].Value?.ToString() == "MajorMinorPatch" && assemblyAttribute.ConstructorArguments[1].Value?.ToString() == "..")
-                    {
-                        return;
-                    }
-                }
-            }
+            return;
         }
 
         if (assemblyVersion >= removeInVersion)
@@ -200,8 +160,8 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var expectedObsoleteMessage = BuildMessage(assemblyVersion, message, replacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
-        var expectedIsError = treatAsErrorFromVersion is not null && assemblyVersion >= treatAsErrorFromVersion;
+        var expectedObsoleteMessage = BuildMessage(assemblyVersion, values.Message, values.ReplacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
+        var expectedIsError = assemblyVersion >= treatAsErrorFromVersion;
 
         var properties = new Dictionary<string, string?>
         {
@@ -258,31 +218,38 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         return (obsoleteMetadataAttribute, obsoleteAttribute);
     }
 
-    static Location CreateLocation(SyntaxReference? syntaxReference) => CreateLocation(syntaxReference?.SyntaxTree, syntaxReference?.Span);
-
-    static Location CreateLocation(AttributeArgumentSyntax? attributeArgumentSyntax) => CreateLocation(attributeArgumentSyntax?.SyntaxTree, attributeArgumentSyntax?.Span);
-
-    static Location CreateLocation(SyntaxTree? syntaxTree, TextSpan? textSpan)
+    static ObsoleteMetadataAttributeValues GetObsoleteMetadataAttributeValues(AttributeData obsoleteMetadataAttribute)
     {
-        var location = Location.None;
+        string? message = null;
+        string? treatAsErrorFromVersion = null;
+        bool treatAsErrorFromVersionSet = false;
+        string? removeInVersion = null;
+        bool removeInVersionSet = false;
+        string? replacementTypeOrMember = null;
 
-        if (syntaxTree is not null && textSpan is not null)
+        foreach (var argument in obsoleteMetadataAttribute.NamedArguments)
         {
-            location = Location.Create(syntaxTree, textSpan.Value);
+            if (argument.Key == "Message")
+            {
+                message = argument.Value.Value?.ToString();
+            }
+            else if (argument.Key == "TreatAsErrorFromVersion")
+            {
+                treatAsErrorFromVersion = argument.Value.Value?.ToString();
+                treatAsErrorFromVersionSet = true;
+            }
+            else if (argument.Key == "RemoveInVersion")
+            {
+                removeInVersion = argument.Value.Value?.ToString();
+                removeInVersionSet = true;
+            }
+            else if (argument.Key == "ReplacementTypeOrMember")
+            {
+                replacementTypeOrMember = argument.Value.Value?.ToString();
+            }
         }
 
-        return location;
-    }
-
-    static bool TryParseVersion(string? input, out Version? result)
-    {
-        if (input?.IndexOf('.') == -1 && int.TryParse(input, out var major))
-        {
-            result = new Version(major, 0, 0);
-            return true;
-        }
-
-        return Version.TryParse(input, out result);
+        return new ObsoleteMetadataAttributeValues(message, treatAsErrorFromVersion, treatAsErrorFromVersionSet, removeInVersion, removeInVersionSet, replacementTypeOrMember);
     }
 
     static AttributeArgumentSyntax? GetAttributeArgument(SeparatedSyntaxList<AttributeArgumentSyntax>? attributeArguments, string argumentName)
@@ -304,28 +271,80 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         return attributeArgument;
     }
 
+    static bool TryGetAssemblyVersion(Compilation compilation, [NotNullWhen(true)] out Version? assemblyVersion)
+    {
+        assemblyVersion = compilation.Assembly.Identity.Version;
+
+        if (assemblyVersion.Major == 1)
+        {
+            var assemblyMetadataAttributeType = compilation.GetTypeByMetadataName("System.Reflection.AssemblyMetadataAttribute");
+            var assemblyAttributes = compilation.Assembly.GetAttributes();
+
+            foreach (var assemblyAttribute in assemblyAttributes)
+            {
+                if (SymbolEqualityComparer.Default.Equals(assemblyAttribute.AttributeClass, assemblyMetadataAttributeType) && assemblyAttribute.ConstructorArguments.Length == 2)
+                {
+                    if (assemblyAttribute.ConstructorArguments[0].Value?.ToString() == "MajorMinorPatch" && assemblyAttribute.ConstructorArguments[1].Value?.ToString() == "..")
+                    {
+                        assemblyVersion = null;
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    static bool TryParseVersion(string? input, [NotNullWhen(true)] out Version? result)
+    {
+        if (input?.IndexOf('.') == -1 && int.TryParse(input, out var major))
+        {
+            result = new Version(major, 0, 0);
+            return true;
+        }
+
+        return Version.TryParse(input, out result);
+    }
+
+    static Location CreateLocation(SyntaxReference? syntaxReference) => CreateLocation(syntaxReference?.SyntaxTree, syntaxReference?.Span);
+
+    static Location CreateLocation(AttributeArgumentSyntax? attributeArgumentSyntax) => CreateLocation(attributeArgumentSyntax?.SyntaxTree, attributeArgumentSyntax?.Span);
+
+    static Location CreateLocation(SyntaxTree? syntaxTree, TextSpan? textSpan)
+    {
+        var location = Location.None;
+
+        if (syntaxTree is not null && textSpan is not null)
+        {
+            location = Location.Create(syntaxTree, textSpan.Value);
+        }
+
+        return location;
+    }
+
     static string BuildMessage(Version assemblyVersion, string? message, string? replacementTypeOrMember, Version treatAsErrorFromVersion, Version removeInVersion)
     {
         var builder = new StringBuilder();
 
         if (message is not null)
         {
-            builder.AppendFormat("{0}. ", message);
+            _ = builder.AppendFormat("{0}. ", message);
         }
 
         if (replacementTypeOrMember is not null)
         {
-            builder.AppendFormat("Use '{0}' instead. ", replacementTypeOrMember);
+            _ = builder.AppendFormat("Use '{0}' instead. ", replacementTypeOrMember);
         }
 
         if (assemblyVersion < treatAsErrorFromVersion)
         {
             var treatAsErrorFromVersionPatch = treatAsErrorFromVersion.Build == -1 ? 0 : treatAsErrorFromVersion.Build;
-            builder.AppendFormat("Will be treated as an error from version {0}.{1}.{2}. ", treatAsErrorFromVersion.Major, treatAsErrorFromVersion.Minor, treatAsErrorFromVersionPatch);
+            _ = builder.AppendFormat("Will be treated as an error from version {0}.{1}.{2}. ", treatAsErrorFromVersion.Major, treatAsErrorFromVersion.Minor, treatAsErrorFromVersionPatch);
         }
 
         var removeInVersionPatch = removeInVersion.Build == -1 ? 0 : removeInVersion.Build;
-        builder.AppendFormat("Will be removed in version {0}.{1}.{2}.", removeInVersion.Major, removeInVersion.Minor, removeInVersionPatch);
+        _ = builder.AppendFormat("Will be removed in version {0}.{1}.{2}.", removeInVersion.Major, removeInVersion.Minor, removeInVersionPatch);
 
         return builder.ToString();
     }
