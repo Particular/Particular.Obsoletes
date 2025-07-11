@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace Particular.Obsoletes;
+﻿namespace Particular.Obsoletes;
 
 using System;
 using System.Diagnostics;
