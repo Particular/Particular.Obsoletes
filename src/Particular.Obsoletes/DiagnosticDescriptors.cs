@@ -12,10 +12,10 @@ public static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor MissingObsoleteAttribute = new(
-        id: DiagnosticIds.MissingObsoleteAttribute,
-        title: "ObsoleteMetadata attributes should have a corresponding Obsolete attribute",
-        messageFormat: "Add an Obsolete attribute",
+    public static readonly DiagnosticDescriptor MissingTreatAsErrorFromVersion = new(
+        id: DiagnosticIds.MissingTreatAsErrorFromVersion,
+        title: "TreatAsErrorFromVersion should be specified",
+        messageFormat: "TreatAsErrorFromVersion is required but it has not been specified",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -24,14 +24,6 @@ public static class DiagnosticDescriptors
         id: DiagnosticIds.MissingRemoveInVersion,
         title: "RemoveInVersion properties should be specified",
         messageFormat: "RemoveInVersion is required but it has not been specified",
-        category: "Code",
-        defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
-    public static readonly DiagnosticDescriptor MissingTreatAsErrorFromVersion = new(
-        id: DiagnosticIds.MissingTreatAsErrorFromVersion,
-        title: "TreatAsErrorFromVersion should be specified",
-        messageFormat: "TreatAsErrorFromVersion is required but it has not been specified",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -64,6 +56,14 @@ public static class DiagnosticDescriptors
         id: DiagnosticIds.RemoveObsoleteMember,
         title: "Obsolete members should be removed",
         messageFormat: "The assembly version '{0}' is greater than or equal to the version specified in RemoveInVersion '{1}'. The member should be removed or RemoveInVersion increased.",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor MissingObsoleteAttribute = new(
+        id: DiagnosticIds.MissingObsoleteAttribute,
+        title: "ObsoleteMetadata attributes should have a corresponding Obsolete attribute",
+        messageFormat: "Add an Obsolete attribute",
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
