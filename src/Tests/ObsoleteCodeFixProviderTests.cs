@@ -8,14 +8,43 @@ using Tests.Helpers;
 public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer, ObsoleteCodeFixProvider>
 {
     [Test]
-    public Task MissingObsolete1()
+    public Task MissingObsolete()
     {
         var original = """
+        using System;
         using Particular.Obsoletes;
 
+        [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        public class Foo
+        {
+
+        }
+        """;
+
+        var expected = """
+        using System;
+        using Particular.Obsoletes;
+
+        [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be removed in version 3.0.0.", true)]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(original, expected);
+    }
+
+    [Test]
+    public Task MissingObsolete_NeedsUsing_UsingsInside()
+    {
+        var original = """
         namespace Blah;
 
-        using System.Runtime;
+        using Particular.Obsoletes;
 
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         public class Foo
@@ -25,12 +54,10 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         """;
 
         var expected = """
-        using Particular.Obsoletes;
-
         namespace Blah;
 
         using System;
-        using System.Runtime;
+        using Particular.Obsoletes;
 
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
         [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
@@ -44,39 +71,39 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     }
 
     [Test]
-    public Task MissingObsolete2()
+    public Task MissingObsolete_NeedsUsing_UsingsOutside()
     {
         var original = """
-     using System;
-     using Particular.Obsoletes;
+        using Particular.Obsoletes;
 
-     [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
-     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-     public class Foo
-     {
+        namespace Blah;
 
-     }
-     """;
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        public class Foo
+        {
+
+        }
+        """;
 
         var expected = """
-     using System;
-     using Particular.Obsoletes;
+        using System;
+        using Particular.Obsoletes;
 
-     [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
-     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-     [Obsolete("Will be removed in version 3.0.0.", true)]
-     public class Foo
-     {
+        namespace Blah;
 
-     }
-     """;
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
+        public class Foo
+        {
+
+        }
+        """;
 
         return Assert(original, expected);
     }
 
-
     [Test]
-    public Task MissingConstructorArguments1()
+    public Task MissingConstructorArguments_None()
     {
         var original = """
         using System;
@@ -106,31 +133,31 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     }
 
     [Test]
-    public Task MissingConstructorArguments2()
+    public Task MissingConstructorArguments_Error()
     {
         var original = """
-     using System;
-     using Particular.Obsoletes;
+        using System;
+        using Particular.Obsoletes;
 
-     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-     [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.")]
-     public class Foo
-     {
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.")]
+        public class Foo
+        {
 
-     }
-     """;
+        }
+        """;
 
         var expected = """
-     using System;
-     using Particular.Obsoletes;
+        using System;
+        using Particular.Obsoletes;
 
-     [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
-     [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
-     public class Foo
-     {
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)]
+        public class Foo
+        {
 
-     }
-     """;
+        }
+        """;
 
         return Assert(original, expected);
     }
