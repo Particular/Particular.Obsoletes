@@ -98,7 +98,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var (obsoleteMetadataAttribute, obsoleteAttribute) = GetAttributeData(context.Compilation, context.ContainingSymbol);
+        var (obsoleteMetadataAttribute, obsoleteAttribute) = GetAttributeData(context.ContainingSymbol);
 
         if (obsoleteMetadataAttribute is null)
         {
@@ -196,21 +196,18 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    static (AttributeData? obsoleteMetadataAttribute, AttributeData? obsoleteAttribute) GetAttributeData(Compilation compilation, ISymbol symbol)
+    static (AttributeData? obsoleteMetadataAttribute, AttributeData? obsoleteAttribute) GetAttributeData(ISymbol symbol)
     {
         AttributeData? obsoleteMetadataAttribute = null;
         AttributeData? obsoleteAttribute = null;
 
-        var obsoleteMetadataAttributeType = compilation.GetTypeByMetadataName("Particular.Obsoletes.ObsoleteMetadataAttribute");
-        var obsoleteAttributeType = compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
-
         foreach (var attribute in symbol.GetAttributes())
         {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteMetadataAttributeType))
+            if (attribute.AttributeClass is { Name: "ObsoleteMetadataAttribute", ContainingType: null, ContainingNamespace: { Name: "Obsoletes", ContainingNamespace: { Name: "Particular", ContainingNamespace.IsGlobalNamespace: true } } })
             {
                 obsoleteMetadataAttribute = attribute;
             }
-            else if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, obsoleteAttributeType))
+            else if (attribute.AttributeClass is { Name: "ObsoleteAttribute", ContainingType: null, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } })
             {
                 obsoleteAttribute = attribute;
             }
@@ -278,14 +275,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (assemblyVersion.Major == 1)
         {
-            var assemblyMetadataAttributeType = compilation.GetTypeByMetadataName("System.Reflection.AssemblyMetadataAttribute");
             var assemblyAttributes = compilation.Assembly.GetAttributes();
 
             foreach (var assemblyAttribute in assemblyAttributes)
             {
-                if (SymbolEqualityComparer.Default.Equals(assemblyAttribute.AttributeClass, assemblyMetadataAttributeType) && assemblyAttribute.ConstructorArguments.Length == 2)
+                if (assemblyAttribute.AttributeClass is { Name: "AssemblyMetadataAttribute", ContainingType: null, ContainingNamespace: { Name: "Reflection", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } })
                 {
-                    if (assemblyAttribute.ConstructorArguments[0].Value?.ToString() == "MajorMinorPatch" && assemblyAttribute.ConstructorArguments[1].Value?.ToString() == "..")
+                    if (assemblyAttribute.ConstructorArguments.Length == 2 && assemblyAttribute.ConstructorArguments[0].Value?.ToString() == "MajorMinorPatch" && assemblyAttribute.ConstructorArguments[1].Value?.ToString() == "..")
                     {
                         assemblyVersion = null;
                         return false;
