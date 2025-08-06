@@ -114,12 +114,12 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (!values.TreatAsErrorFromVersionSet)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), values.TreatAsErrorFromVersion));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingTreatAsErrorFromVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
         }
 
         if (!values.RemoveInVersionSet)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference), values.RemoveInVersion));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingRemoveInVersion, CreateLocation(obsoleteMetadataAttribute.ApplicationSyntaxReference)));
         }
 
         if (!values.TreatAsErrorFromVersionSet || !values.RemoveInVersionSet)
@@ -178,7 +178,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (obsoleteAttribute.ConstructorArguments.Length != 2)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties, obsoleteAttribute.ConstructorArguments.Length));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
             return;
         }
 
