@@ -13,7 +13,6 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <GenerateSBOM>false</GenerateSBOM>
   </PropertyGroup>
 
   <ItemGroup>
