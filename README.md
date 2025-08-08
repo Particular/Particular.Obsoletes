@@ -8,13 +8,13 @@ The package includes the [`PreObsolete`](https://github.com/Particular/Particula
 
 Add the following package reference to your csproj:
 
-```
+```xml
 <PackageReference Include="Particular.Obsoletes" Version="{package version} PrivateAssets="All" ExcludeAssets="runtime" />
 ```
 
 After adding this package to a project, an `ObsoleteMetadata` attribute can be added to API using this format:
 
-```
+```csharp
 [ObsoleteMetadata(Message = "Message describing why the API is being deprecated", TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
 ```
 
