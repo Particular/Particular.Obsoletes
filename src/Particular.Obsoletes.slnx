@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Custom.Build.props" />
+  </Folder>
   <Project Path="Particular.Obsoletes.Attributes/Particular.Obsoletes.Attributes.csproj" Id="913cdc41-fe8d-487d-8230-0e6d71e65301" />
   <Project Path="Particular.Obsoletes.Fixes/Particular.Obsoletes.Fixes.csproj" Id="ac6a9b37-319f-43e8-a585-3a2768df835a" />
   <Project Path="Particular.Obsoletes/Particular.Obsoletes.csproj" />
