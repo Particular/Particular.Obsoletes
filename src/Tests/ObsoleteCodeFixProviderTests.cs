@@ -1,12 +1,17 @@
 ﻿namespace Tests;
 
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Particular.AnalyzerTesting;
 using Particular.Obsoletes;
 using Particular.Obsoletes.Fixes;
-using Tests.Helpers;
 
 public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer, ObsoleteCodeFixProvider>
 {
+    static readonly MetadataReference Obsoletes = MetadataReference.CreateFromFile(typeof(ObsoleteMetadataAttribute).Assembly.Location);
+
+    protected override void ConfigureFixtureTests(CodeFixTest test) => test.AddReferences(Obsoletes);
+
     [Test]
     public Task MissingObsolete()
     {

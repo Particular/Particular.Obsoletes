@@ -1,12 +1,18 @@
 ﻿namespace Tests;
 
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Particular.AnalyzerTesting;
 using Particular.Obsoletes;
-using Tests.Helpers;
 
 public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
 {
+    static readonly MetadataReference Obsoletes = MetadataReference.CreateFromFile(typeof(ObsoleteMetadataAttribute).Assembly.Location);
+
+    protected override void ConfigureFixtureTests(AnalyzerTest test) => test.AddReferences(Obsoletes)
+        .WithCommonUsings("System", "System.Threading", "System.Threading.Tasks", "Particular.Obsoletes");
+
     [Test]
     public Task NoErrors()
     {
