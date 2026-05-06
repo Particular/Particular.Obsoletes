@@ -322,26 +322,48 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
     static string BuildMessage(Version assemblyVersion, string? message, string? replacementTypeOrMember, Version treatAsErrorFromVersion, Version removeInVersion)
     {
-        var builder = new StringBuilder();
+        var builder = new StringBuilder((message?.Length ?? 0) + (replacementTypeOrMember?.Length ?? 0) + 256);
 
         if (message is not null)
         {
-            _ = builder.AppendFormat("{0}{1} ", message, message.AsSpan().EndsWith(Dot) ? string.Empty : ".");
+            _ = builder
+                .Append(message)
+                .Append(message.AsSpan().EndsWith(Dot) ? string.Empty : ".")
+                .Append(' ');
         }
 
         if (replacementTypeOrMember is not null)
         {
-            _ = builder.AppendFormat("Use '{0}' instead. ", replacementTypeOrMember);
+            _ = builder
+                .Append("Use '")
+                .Append(replacementTypeOrMember)
+                .Append("' instead. ");
         }
 
         if (assemblyVersion < treatAsErrorFromVersion)
         {
             var treatAsErrorFromVersionPatch = treatAsErrorFromVersion.Build == -1 ? 0 : treatAsErrorFromVersion.Build;
-            _ = builder.AppendFormat("Will be treated as an error from version {0}.{1}.{2}. ", treatAsErrorFromVersion.Major, treatAsErrorFromVersion.Minor, treatAsErrorFromVersionPatch);
+
+            _ = builder
+                .Append("Will be treated as an error from version ")
+                .Append(treatAsErrorFromVersion.Major)
+                .Append('.')
+                .Append(treatAsErrorFromVersion.Minor)
+                .Append('.')
+                .Append(treatAsErrorFromVersionPatch)
+                .Append(". ");
         }
 
         var removeInVersionPatch = removeInVersion.Build == -1 ? 0 : removeInVersion.Build;
-        _ = builder.AppendFormat("Will be removed in version {0}.{1}.{2}.", removeInVersion.Major, removeInVersion.Minor, removeInVersionPatch);
+
+        _ = builder
+            .Append("Will be removed in version ")
+            .Append(removeInVersion.Major)
+            .Append('.')
+            .Append(removeInVersion.Minor)
+            .Append('.')
+            .Append(removeInVersionPatch)
+            .Append('.');
 
         return builder.ToString();
     }
