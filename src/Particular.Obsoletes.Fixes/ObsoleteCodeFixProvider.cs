@@ -31,29 +31,39 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
             message ??= string.Empty;
             error ??= string.Empty;
 
-            if (diagnostic.Id == DiagnosticIds.MissingObsoleteAttribute)
+            switch (diagnostic.Id)
             {
-                var title = "Add missing Obsolete attribute";
-                var codeAction = CodeAction.Create(title, token => AddMissingObsoleteAttribute(context.Document, diagnostic.Location, message, error, token), title);
-                context.RegisterCodeFix(codeAction, diagnostic);
-            }
-            else if (diagnostic.Id == DiagnosticIds.ObsoleteAttributeMissingConstructorArguments)
-            {
-                var title = "Add missing attribute arguments";
-                var codeAction = CodeAction.Create(title, token => AddMissingConstructorArguments(context.Document, diagnostic.Location, message, error, token), title);
-                context.RegisterCodeFix(codeAction, diagnostic);
-            }
-            else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeMessageArgument)
-            {
-                var title = "Fix incorrect message argument";
-                var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeMessageArgument(context.Document, diagnostic.Location, message, token), title);
-                context.RegisterCodeFix(codeAction, diagnostic);
-            }
-            else if (diagnostic.Id == DiagnosticIds.IncorrectObsoleteAttributeErrorArgument)
-            {
-                var title = "Fix incorrect error argument";
-                var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeErrorArgument(context.Document, diagnostic.Location, error, token), title);
-                context.RegisterCodeFix(codeAction, diagnostic);
+                case DiagnosticIds.MissingObsoleteAttribute:
+                    {
+                        var title = "Add missing Obsolete attribute";
+                        var codeAction = CodeAction.Create(title, token => AddMissingObsoleteAttribute(context.Document, diagnostic.Location, message, error, token), title);
+                        context.RegisterCodeFix(codeAction, diagnostic);
+                        break;
+                    }
+                case DiagnosticIds.ObsoleteAttributeMissingConstructorArguments:
+                    {
+                        var title = "Add missing attribute arguments";
+                        var codeAction = CodeAction.Create(title, token => AddMissingConstructorArguments(context.Document, diagnostic.Location, message, error, token), title);
+                        context.RegisterCodeFix(codeAction, diagnostic);
+                        break;
+                    }
+                case DiagnosticIds.IncorrectObsoleteAttributeMessageArgument:
+                    {
+                        var title = "Fix incorrect message argument";
+                        var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeMessageArgument(context.Document, diagnostic.Location, message, token), title);
+                        context.RegisterCodeFix(codeAction, diagnostic);
+                        break;
+                    }
+                case DiagnosticIds.IncorrectObsoleteAttributeErrorArgument:
+                    {
+                        var title = "Fix incorrect error argument";
+                        var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeErrorArgument(context.Document, diagnostic.Location, error, token), title);
+                        context.RegisterCodeFix(codeAction, diagnostic);
+                        break;
+                    }
+
+                default:
+                    break;
             }
         }
 
@@ -62,22 +72,10 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
     static async Task<Document> AddMissingObsoleteAttribute(Document document, Location location, string message, string error, CancellationToken cancellationToken)
     {
-        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
-        {
-            return document;
-        }
-
-        if (root.FindNode(location.SourceSpan) is not SyntaxNode { Parent.Parent: SyntaxNode member })
-        {
-            return document;
-        }
-
-        if (await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false) is not SemanticModel semanticModel)
-        {
-            return document;
-        }
-
-        if (semanticModel.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute") is not INamedTypeSymbol obsoleteAttributeTypeSymbol)
+        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not { } root ||
+            root.FindNode(location.SourceSpan) is not { Parent.Parent: { } member } ||
+            await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false) is not { } semanticModel
+            || semanticModel.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute") is not { } obsoleteAttributeTypeSymbol)
         {
             return document;
         }
@@ -96,22 +94,10 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
     static async Task<Document> AddMissingConstructorArguments(Document document, Location location, string message, string error, CancellationToken cancellationToken)
     {
-        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
-        {
-            return document;
-        }
-
-        if (root.FindNode(location.SourceSpan) is not AttributeSyntax original)
-        {
-            return document;
-        }
-
-        if (await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false) is not SemanticModel semanticModel)
-        {
-            return document;
-        }
-
-        if (semanticModel.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute") is not INamedTypeSymbol obsoleteAttributeTypeSymbol)
+        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not { } root ||
+            root.FindNode(location.SourceSpan) is not AttributeSyntax original ||
+            await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false) is not { } semanticModel ||
+            semanticModel.Compilation.GetTypeByMetadataName("System.ObsoleteAttribute") is not { } obsoleteAttributeTypeSymbol)
         {
             return document;
         }
@@ -133,12 +119,7 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
 
     static async Task<Document> FixIncorrectObsoleteAttributeArgument(Document document, Location location, Func<SyntaxGenerator, SyntaxNode> literalExpression, CancellationToken cancellationToken)
     {
-        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not SyntaxNode root)
-        {
-            return document;
-        }
-
-        if (root.FindNode(location.SourceSpan) is not AttributeArgumentSyntax original)
+        if (await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false) is not { } root || root.FindNode(location.SourceSpan) is not AttributeArgumentSyntax original)
         {
             return document;
         }
