@@ -326,7 +326,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (message is not null)
         {
-            _ = builder.AppendFormat("{0}. ", message);
+            _ = builder.AppendFormat("{0}{1} ", message, message.AsSpan().EndsWith(Dot) ? string.Empty : ".");
         }
 
         if (replacementTypeOrMember is not null)
@@ -345,4 +345,6 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         return builder.ToString();
     }
+
+    static ReadOnlySpan<char> Dot => ".";
 }
