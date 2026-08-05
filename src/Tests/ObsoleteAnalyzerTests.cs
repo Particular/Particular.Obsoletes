@@ -439,8 +439,8 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     public Task IncorrectObsoleteAttributeUrlFormatArgument_WrongValue()
     {
         var code = """
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
-        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, [|UrlFormat = "https://wrong.com/{0}"|])]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", [|UrlFormat = "https://wrong.com/{0}"|])]
         public class Foo
         {
 
@@ -522,5 +522,19 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         """;
 
         return Assert(code, DiagnosticIds.InvalidUrlFormat);
+    }
+
+    [Test]
+    public Task UrlFormatPlaceholderRequiresDiagnosticId()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", [|UrlFormat = "https://docs.particular.net/obsoletions/{0}"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.UrlFormatPlaceholderRequiresDiagnosticId);
     }
 }

@@ -123,4 +123,12 @@ public static class DiagnosticDescriptors
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UrlFormatPlaceholderRequiresDiagnosticId = new(
+        id: DiagnosticIds.UrlFormatPlaceholderRequiresDiagnosticId,
+        title: "UrlFormat with placeholder requires DiagnosticId",
+        messageFormat: "The UrlFormat '{0}' contains a placeholder but no DiagnosticId is specified. The compiler will substitute the default 'CS0618', which is unlikely to produce a valid URL.",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

@@ -45,6 +45,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             DiagnosticDescriptors.IncorrectObsoleteAttributeUrlFormatArgument,
             DiagnosticDescriptors.InvalidDiagnosticId,
             DiagnosticDescriptors.InvalidUrlFormat,
+            DiagnosticDescriptors.UrlFormatPlaceholderRequiresDiagnosticId,
         ];
 
     public override void Initialize(AnalysisContext context)
@@ -167,6 +168,7 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         var hasInvalidDiagnosticId = values.DiagnosticIdSet && string.IsNullOrWhiteSpace(values.DiagnosticId);
         var hasInvalidUrlFormat = values.UrlFormatSet && CountFormatPlaceholders(values.UrlFormat) > 1;
+        var hasUrlFormatPlaceholderWithoutDiagnosticId = values.UrlFormatSet && !values.DiagnosticIdSet && CountFormatPlaceholders(values.UrlFormat) == 1;
 
         if (hasInvalidDiagnosticId)
         {
@@ -180,7 +182,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidUrlFormat, CreateLocation(attributeArgument), values.UrlFormat));
         }
 
-        if (hasInvalidDiagnosticId || hasInvalidUrlFormat)
+        if (hasUrlFormatPlaceholderWithoutDiagnosticId)
+        {
+            var attributeArgument = GetAttributeArgumentSyntax(obsoleteMetadataAttributeArguments, nameof(values.UrlFormat));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UrlFormatPlaceholderRequiresDiagnosticId, CreateLocation(attributeArgument), values.UrlFormat));
+        }
+
+        if (hasInvalidDiagnosticId || hasInvalidUrlFormat || hasUrlFormatPlaceholderWithoutDiagnosticId)
         {
             return;
         }
