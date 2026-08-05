@@ -54,7 +54,7 @@ public sealed class ObsoleteMetadataAttribute : Attribute
     /// </para>
     /// <para>
     /// Use <c>{0}</c> when the URL page slug matches the diagnostic ID, for example a documentation site:
-    /// <c>DiagnosticId = "NSB0001"</c> with <c>UrlFormat = "https://docs.particular.net/obsoletions/{0}"</c> produces <c>https://docs.particular.net/obsoletions/NSB0001</c>.
+    /// <c>DiagnosticId = "NSB0001"</c> with <c>UrlFormat = "https://docs.particular.net/r/obsoletions/{0}"</c> produces <c>https://docs.particular.net/r/obsoletions/NSB0001</c>.
     /// </para>
     /// <para>
     /// Use a literal URL (no <c>{0}</c>) when linking directly to a specific GitHub issue,

@@ -235,7 +235,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         public class Foo
         {
 
@@ -247,8 +247,8 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("2.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
-        [Obsolete("Will be removed in version 3.0.0.", true, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        [Obsolete("Will be removed in version 3.0.0.", true, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         public class Foo
         {
 
@@ -297,7 +297,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         [Obsolete]
         public class Foo
         {
@@ -310,8 +310,8 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
-        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         public class Foo
         {
 
@@ -438,8 +438,8 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
-        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         public class Foo
         {
 
@@ -521,7 +521,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "WRONG", UrlFormat = "https://wrong.com/{0}")]
         public class Foo
         {
@@ -534,8 +534,8 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
         using Particular.Obsoletes;
 
         [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
-        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
-        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/obsoletions/{0}")]
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
         public class Foo
         {
 
