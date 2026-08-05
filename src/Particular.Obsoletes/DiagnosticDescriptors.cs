@@ -91,4 +91,36 @@ public static class DiagnosticDescriptors
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeDiagnosticIdArgument = new(
+        id: DiagnosticIds.IncorrectObsoleteAttributeDiagnosticIdArgument,
+        title: "Obsolete attributes should have a DiagnosticId value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute's DiagnosticId value does not match the information specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeUrlFormatArgument = new(
+        id: DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument,
+        title: "Obsolete attributes should have a UrlFormat value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute's UrlFormat value does not match the information specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidDiagnosticId = new(
+        id: DiagnosticIds.InvalidDiagnosticId,
+        title: "DiagnosticId should not be empty or contain whitespace",
+        messageFormat: "The value specified for DiagnosticId '{0}' is empty or contains whitespace, which prevents it from being used with #pragma warning disable or NoWarn",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidUrlFormat = new(
+        id: DiagnosticIds.InvalidUrlFormat,
+        title: "UrlFormat should contain at most one placeholder",
+        messageFormat: "The value specified for UrlFormat '{0}' contains more than one placeholder. The compiler will ignore UrlFormat when multiple placeholders are present.",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
