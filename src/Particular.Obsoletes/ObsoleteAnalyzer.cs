@@ -200,8 +200,8 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         {
             { "Message", expectedMessage },
             { "Error", expectedError.ToString() },
-            { "DiagnosticId", values.DiagnosticIdSet ? values.DiagnosticId : null },
-            { "UrlFormat", values.UrlFormatSet ? values.UrlFormat : null },
+            { "DiagnosticId", values.DiagnosticId },
+            { "UrlFormat", values.UrlFormat },
         }.ToImmutableDictionary();
 
         if (obsoleteAttribute is null)
@@ -229,8 +229,8 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
         }
 
-        var expectedDiagnosticId = values.DiagnosticIdSet ? values.DiagnosticId : null;
-        var expectedUrlFormat = values.UrlFormatSet ? values.UrlFormat : null;
+        var expectedDiagnosticId = values.DiagnosticId;
+        var expectedUrlFormat = values.UrlFormat;
         string? actualDiagnosticId = null;
         string? actualUrlFormat = null;
 
