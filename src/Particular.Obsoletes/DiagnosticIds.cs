@@ -24,4 +24,6 @@ public static class DiagnosticIds
     public const string InvalidDiagnosticId = Prefix + "0014";
     public const string InvalidUrlFormat = Prefix + "0015";
     public const string UrlFormatPlaceholderRequiresDiagnosticId = Prefix + "0016";
+    public const string MissingObsoleteAttributeDiagnosticIdArgument = Prefix + "0017";
+    public const string MissingObsoleteAttributeUrlFormatArgument = Prefix + "0018";
 }

@@ -354,7 +354,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     }
 
     [Test]
-    public Task IncorrectObsoleteAttributeDiagnosticIdArgument_Missing()
+    public Task MissingObsoleteAttributeDiagnosticIdArgument()
     {
         var original = """
         using System;
@@ -450,7 +450,7 @@ public class ObsoleteCodeFixProviderTests : CodeFixTestFixture<ObsoleteAnalyzer,
     }
 
     [Test]
-    public Task IncorrectObsoleteAttributeUrlFormatArgument_Missing()
+    public Task MissingObsoleteAttributeUrlFormatArgument()
     {
         var original = """
         using System;

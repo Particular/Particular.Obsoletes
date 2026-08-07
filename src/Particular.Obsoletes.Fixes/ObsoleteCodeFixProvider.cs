@@ -18,7 +18,9 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
             DiagnosticIds.IncorrectObsoleteAttributeMessageArgument,
             DiagnosticIds.IncorrectObsoleteAttributeErrorArgument,
             DiagnosticIds.IncorrectObsoleteAttributeDiagnosticIdArgument,
-            DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument
+            DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument,
+            DiagnosticIds.MissingObsoleteAttributeDiagnosticIdArgument,
+            DiagnosticIds.MissingObsoleteAttributeUrlFormatArgument
         ];
 
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
@@ -75,6 +77,20 @@ public class ObsoleteCodeFixProvider : CodeFixProvider
                 case DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument:
                     {
                         var title = "Fix incorrect UrlFormat argument";
+                        var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeUrlFormatArgument(context.Document, diagnostic.Location, urlFormat, token), title);
+                        context.RegisterCodeFix(codeAction, diagnostic);
+                        break;
+                    }
+                case DiagnosticIds.MissingObsoleteAttributeDiagnosticIdArgument:
+                    {
+                        var title = "Add missing DiagnosticId argument";
+                        var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeDiagnosticIdArgument(context.Document, diagnostic.Location, diagnosticId, token), title);
+                        context.RegisterCodeFix(codeAction, diagnostic);
+                        break;
+                    }
+                case DiagnosticIds.MissingObsoleteAttributeUrlFormatArgument:
+                    {
+                        var title = "Add missing UrlFormat argument";
                         var codeAction = CodeAction.Create(title, token => FixIncorrectObsoleteAttributeUrlFormatArgument(context.Document, diagnostic.Location, urlFormat, token), title);
                         context.RegisterCodeFix(codeAction, diagnostic);
                         break;

@@ -404,7 +404,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     }
 
     [Test]
-    public Task IncorrectObsoleteAttributeDiagnosticIdArgument_Missing()
+    public Task MissingObsoleteAttributeDiagnosticIdArgument()
     {
         var code = """
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001")]
@@ -415,7 +415,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         }
         """;
 
-        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeDiagnosticIdArgument);
+        return Assert(code, DiagnosticIds.MissingObsoleteAttributeDiagnosticIdArgument);
     }
 
     [Test]
@@ -451,7 +451,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
     }
 
     [Test]
-    public Task IncorrectObsoleteAttributeUrlFormatArgument_Missing()
+    public Task MissingObsoleteAttributeUrlFormatArgument()
     {
         var code = """
         [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", UrlFormat = "https://github.com/Particular/NServiceBus/issues/42")]
@@ -462,7 +462,7 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
         }
         """;
 
-        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument);
+        return Assert(code, DiagnosticIds.MissingObsoleteAttributeUrlFormatArgument);
     }
 
     [Test]

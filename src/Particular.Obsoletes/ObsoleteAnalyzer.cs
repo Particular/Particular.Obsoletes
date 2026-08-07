@@ -46,6 +46,8 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             DiagnosticDescriptors.InvalidDiagnosticId,
             DiagnosticDescriptors.InvalidUrlFormat,
             DiagnosticDescriptors.UrlFormatPlaceholderRequiresDiagnosticId,
+            DiagnosticDescriptors.MissingObsoleteAttributeDiagnosticIdArgument,
+            DiagnosticDescriptors.MissingObsoleteAttributeUrlFormatArgument,
         ];
 
     public override void Initialize(AnalysisContext context)
@@ -248,20 +250,34 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
 
         if (actualDiagnosticId != expectedDiagnosticId)
         {
-            var diagnosticIdArgument = GetAttributeArgumentSyntax(obsoleteAttributeArguments, "DiagnosticId");
-            var diagnosticIdLocation = diagnosticIdArgument is not null
-                ? CreateLocation(diagnosticIdArgument)
-                : CreateLocation(obsoleteAttribute.ApplicationSyntaxReference);
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeDiagnosticIdArgument, diagnosticIdLocation, properties));
+            if (actualDiagnosticId is null && expectedDiagnosticId is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttributeDiagnosticIdArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
+            }
+            else
+            {
+                var diagnosticIdArgument = GetAttributeArgumentSyntax(obsoleteAttributeArguments, "DiagnosticId");
+                var diagnosticIdLocation = diagnosticIdArgument is not null
+                    ? CreateLocation(diagnosticIdArgument)
+                    : CreateLocation(obsoleteAttribute.ApplicationSyntaxReference);
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeDiagnosticIdArgument, diagnosticIdLocation, properties));
+            }
         }
 
         if (actualUrlFormat != expectedUrlFormat)
         {
-            var urlFormatArgument = GetAttributeArgumentSyntax(obsoleteAttributeArguments, "UrlFormat");
-            var urlFormatLocation = urlFormatArgument is not null
-                ? CreateLocation(urlFormatArgument)
-                : CreateLocation(obsoleteAttribute.ApplicationSyntaxReference);
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeUrlFormatArgument, urlFormatLocation, properties));
+            if (actualUrlFormat is null && expectedUrlFormat is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttributeUrlFormatArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
+            }
+            else
+            {
+                var urlFormatArgument = GetAttributeArgumentSyntax(obsoleteAttributeArguments, "UrlFormat");
+                var urlFormatLocation = urlFormatArgument is not null
+                    ? CreateLocation(urlFormatArgument)
+                    : CreateLocation(obsoleteAttribute.ApplicationSyntaxReference);
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeUrlFormatArgument, urlFormatLocation, properties));
+            }
         }
     }
 

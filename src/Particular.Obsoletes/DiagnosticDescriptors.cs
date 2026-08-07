@@ -131,4 +131,20 @@ public static class DiagnosticDescriptors
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor MissingObsoleteAttributeDiagnosticIdArgument = new(
+        id: DiagnosticIds.MissingObsoleteAttributeDiagnosticIdArgument,
+        title: "Obsolete attributes should have a DiagnosticId value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute is missing the DiagnosticId value specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor MissingObsoleteAttributeUrlFormatArgument = new(
+        id: DiagnosticIds.MissingObsoleteAttributeUrlFormatArgument,
+        title: "Obsolete attributes should have a UrlFormat value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute is missing the UrlFormat value specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
