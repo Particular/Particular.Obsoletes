@@ -41,6 +41,13 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             DiagnosticDescriptors.ObsoleteAttributeMissingConstructorArguments,
             DiagnosticDescriptors.IncorrectObsoleteAttributeMessageArgument,
             DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument,
+            DiagnosticDescriptors.IncorrectObsoleteAttributeDiagnosticIdArgument,
+            DiagnosticDescriptors.IncorrectObsoleteAttributeUrlFormatArgument,
+            DiagnosticDescriptors.InvalidDiagnosticId,
+            DiagnosticDescriptors.InvalidUrlFormat,
+            DiagnosticDescriptors.UrlFormatPlaceholderRequiresDiagnosticId,
+            DiagnosticDescriptors.MissingObsoleteAttributeDiagnosticIdArgument,
+            DiagnosticDescriptors.MissingObsoleteAttributeUrlFormatArgument,
         ];
 
     public override void Initialize(AnalysisContext context)
@@ -161,6 +168,33 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        var hasInvalidDiagnosticId = values.DiagnosticIdSet && string.IsNullOrWhiteSpace(values.DiagnosticId);
+        var hasInvalidUrlFormat = values.UrlFormatSet && CountFormatPlaceholders(values.UrlFormat) > 1;
+        var hasUrlFormatPlaceholderWithoutDiagnosticId = values.UrlFormatSet && !values.DiagnosticIdSet && CountFormatPlaceholders(values.UrlFormat) == 1;
+
+        if (hasInvalidDiagnosticId)
+        {
+            var attributeArgument = GetAttributeArgumentSyntax(obsoleteMetadataAttributeArguments, nameof(values.DiagnosticId));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidDiagnosticId, CreateLocation(attributeArgument), values.DiagnosticId));
+        }
+
+        if (hasInvalidUrlFormat)
+        {
+            var attributeArgument = GetAttributeArgumentSyntax(obsoleteMetadataAttributeArguments, nameof(values.UrlFormat));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidUrlFormat, CreateLocation(attributeArgument), values.UrlFormat));
+        }
+
+        if (hasUrlFormatPlaceholderWithoutDiagnosticId)
+        {
+            var attributeArgument = GetAttributeArgumentSyntax(obsoleteMetadataAttributeArguments, nameof(values.UrlFormat));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UrlFormatPlaceholderRequiresDiagnosticId, CreateLocation(attributeArgument), values.UrlFormat));
+        }
+
+        if (hasInvalidDiagnosticId || hasInvalidUrlFormat || hasUrlFormatPlaceholderWithoutDiagnosticId)
+        {
+            return;
+        }
+
         var expectedMessage = BuildMessage(assemblyVersion, values.Message, values.ReplacementTypeOrMember, treatAsErrorFromVersion, removeInVersion);
         var expectedError = assemblyVersion >= treatAsErrorFromVersion;
 
@@ -168,6 +202,8 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         {
             { "Message", expectedMessage },
             { "Error", expectedError.ToString() },
+            { "DiagnosticId", values.DiagnosticId },
+            { "UrlFormat", values.UrlFormat },
         }.ToImmutableDictionary();
 
         if (obsoleteAttribute is null)
@@ -193,6 +229,55 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         if (actualError != expectedError)
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeErrorArgument, CreateLocation(obsoleteAttributeArguments?[1]), properties));
+        }
+
+        var expectedDiagnosticId = values.DiagnosticId;
+        var expectedUrlFormat = values.UrlFormat;
+        string? actualDiagnosticId = null;
+        string? actualUrlFormat = null;
+
+        foreach (var argument in obsoleteAttribute.NamedArguments)
+        {
+            if (argument.Key == "DiagnosticId")
+            {
+                actualDiagnosticId = argument.Value.Value?.ToString();
+            }
+            else if (argument.Key == "UrlFormat")
+            {
+                actualUrlFormat = argument.Value.Value?.ToString();
+            }
+        }
+
+        if (actualDiagnosticId != expectedDiagnosticId)
+        {
+            if (actualDiagnosticId is null && expectedDiagnosticId is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttributeDiagnosticIdArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
+            }
+            else
+            {
+                var diagnosticIdArgument = GetAttributeArgumentSyntax(obsoleteAttributeArguments, "DiagnosticId");
+                var diagnosticIdLocation = diagnosticIdArgument is not null
+                    ? CreateLocation(diagnosticIdArgument)
+                    : CreateLocation(obsoleteAttribute.ApplicationSyntaxReference);
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeDiagnosticIdArgument, diagnosticIdLocation, properties));
+            }
+        }
+
+        if (actualUrlFormat != expectedUrlFormat)
+        {
+            if (actualUrlFormat is null && expectedUrlFormat is not null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingObsoleteAttributeUrlFormatArgument, CreateLocation(obsoleteAttribute.ApplicationSyntaxReference), properties));
+            }
+            else
+            {
+                var urlFormatArgument = GetAttributeArgumentSyntax(obsoleteAttributeArguments, "UrlFormat");
+                var urlFormatLocation = urlFormatArgument is not null
+                    ? CreateLocation(urlFormatArgument)
+                    : CreateLocation(obsoleteAttribute.ApplicationSyntaxReference);
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.IncorrectObsoleteAttributeUrlFormatArgument, urlFormatLocation, properties));
+            }
         }
     }
 
@@ -224,6 +309,10 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         string? removeInVersion = null;
         bool removeInVersionSet = false;
         string? replacementTypeOrMember = null;
+        string? diagnosticId = null;
+        bool diagnosticIdSet = false;
+        string? urlFormat = null;
+        bool urlFormatSet = false;
 
         foreach (var argument in obsoleteMetadataAttribute.NamedArguments)
         {
@@ -245,9 +334,19 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
             {
                 replacementTypeOrMember = argument.Value.Value?.ToString();
             }
+            else if (argument.Key == "DiagnosticId")
+            {
+                diagnosticId = argument.Value.Value?.ToString();
+                diagnosticIdSet = true;
+            }
+            else if (argument.Key == "UrlFormat")
+            {
+                urlFormat = argument.Value.Value?.ToString();
+                urlFormatSet = true;
+            }
         }
 
-        return new ObsoleteMetadataAttributeValues(message, treatAsErrorFromVersion, treatAsErrorFromVersionSet, removeInVersion, removeInVersionSet, replacementTypeOrMember);
+        return new ObsoleteMetadataAttributeValues(message, treatAsErrorFromVersion, treatAsErrorFromVersionSet, removeInVersion, removeInVersionSet, replacementTypeOrMember, diagnosticId, diagnosticIdSet, urlFormat, urlFormatSet);
     }
 
     static AttributeArgumentSyntax? GetAttributeArgumentSyntax(SeparatedSyntaxList<AttributeArgumentSyntax>? attributeArguments, string argumentName)
@@ -302,6 +401,32 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
         }
 
         return Version.TryParse(input, out result);
+    }
+
+    static int CountFormatPlaceholders(string? format)
+    {
+        if (format is null)
+        {
+            return 0;
+        }
+
+        var count = 0;
+        var remaining = format.AsSpan();
+
+        while (remaining.Length > 0)
+        {
+            var index = remaining.IndexOf(Placeholder);
+
+            if (index < 0)
+            {
+                break;
+            }
+
+            count++;
+            remaining = remaining.Slice(index + Placeholder.Length);
+        }
+
+        return count;
     }
 
     static Location CreateLocation(SyntaxReference? syntaxReference) => CreateLocation(syntaxReference?.SyntaxTree, syntaxReference?.Span);
@@ -369,4 +494,5 @@ public class ObsoleteAnalyzer : DiagnosticAnalyzer
     }
 
     static ReadOnlySpan<char> Dot => ".";
+    static ReadOnlySpan<char> Placeholder => "{0}";
 }

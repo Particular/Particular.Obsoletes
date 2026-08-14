@@ -336,4 +336,205 @@ public class ObsoleteAnalyzerTests : AnalyzerTestFixture<ObsoleteAnalyzer>
 
         return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeErrorArgument);
     }
+
+    [Test]
+    public Task NoErrors_WithDiagnosticIdAndTemplateUrlFormat()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code);
+    }
+
+    [Test]
+    public Task NoErrors_WithLiteralUrlFormat_WithoutDiagnosticId()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", UrlFormat = "https://github.com/Particular/NServiceBus/issues/42")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, UrlFormat = "https://github.com/Particular/NServiceBus/issues/42")]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code);
+    }
+
+    [Test]
+    public Task NoErrors_WithDiagnosticIdAndLiteralUrlFormat()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://github.com/Particular/NServiceBus/issues/42")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", UrlFormat = "https://github.com/Particular/NServiceBus/issues/42")]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeDiagnosticIdArgument_WrongValue()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, [|DiagnosticId = "WRONG"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeDiagnosticIdArgument);
+    }
+
+    [Test]
+    public Task MissingObsoleteAttributeDiagnosticIdArgument()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001")]
+        [[|Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteAttributeDiagnosticIdArgument);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeDiagnosticIdArgument_ExtraOnObsolete()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, [|DiagnosticId = "NSB0001"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeDiagnosticIdArgument);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeUrlFormatArgument_WrongValue()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", DiagnosticId = "NSB0001", UrlFormat = "https://docs.particular.net/r/obsoletions/{0}")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, DiagnosticId = "NSB0001", [|UrlFormat = "https://wrong.com/{0}"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument);
+    }
+
+    [Test]
+    public Task MissingObsoleteAttributeUrlFormatArgument()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", UrlFormat = "https://github.com/Particular/NServiceBus/issues/42")]
+        [[|Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false)|]]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.MissingObsoleteAttributeUrlFormatArgument);
+    }
+
+    [Test]
+    public Task IncorrectObsoleteAttributeUrlFormatArgument_ExtraOnObsolete()
+    {
+        var code = """
+        [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3")]
+        [Obsolete("Will be treated as an error from version 2.0.0. Will be removed in version 3.0.0.", false, [|UrlFormat = "https://github.com/Particular/NServiceBus/issues/42"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument);
+    }
+
+    [Test]
+    public Task InvalidDiagnosticId_Empty()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", [|DiagnosticId = ""|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.InvalidDiagnosticId);
+    }
+
+    [Test]
+    public Task InvalidDiagnosticId_Whitespace()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", [|DiagnosticId = " "|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.InvalidDiagnosticId);
+    }
+
+    [Test]
+    public Task InvalidUrlFormat_MultiplePlaceholders()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", [|UrlFormat = "https://example.com/{0}/{0}"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.InvalidUrlFormat);
+    }
+
+    [Test]
+    public Task UrlFormatPlaceholderRequiresDiagnosticId()
+    {
+        var code = """
+        [ObsoleteMetadata(TreatAsErrorFromVersion = "2", RemoveInVersion = "3", [|UrlFormat = "https://docs.particular.net/r/obsoletions/{0}"|])]
+        public class Foo
+        {
+
+        }
+        """;
+
+        return Assert(code, DiagnosticIds.UrlFormatPlaceholderRequiresDiagnosticId);
+    }
 }
