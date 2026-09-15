@@ -91,4 +91,60 @@ public static class DiagnosticDescriptors
         category: "Code",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeDiagnosticIdArgument = new(
+        id: DiagnosticIds.IncorrectObsoleteAttributeDiagnosticIdArgument,
+        title: "Obsolete attributes should have a DiagnosticId value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute's DiagnosticId value does not match the information specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor IncorrectObsoleteAttributeUrlFormatArgument = new(
+        id: DiagnosticIds.IncorrectObsoleteAttributeUrlFormatArgument,
+        title: "Obsolete attributes should have a UrlFormat value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute's UrlFormat value does not match the information specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidDiagnosticId = new(
+        id: DiagnosticIds.InvalidDiagnosticId,
+        title: "DiagnosticId should not be empty or contain whitespace",
+        messageFormat: "The value specified for DiagnosticId '{0}' is empty or contains whitespace, which prevents it from being used with #pragma warning disable or NoWarn",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidUrlFormat = new(
+        id: DiagnosticIds.InvalidUrlFormat,
+        title: "UrlFormat should contain at most one placeholder",
+        messageFormat: "The value specified for UrlFormat '{0}' contains more than one placeholder. The compiler will ignore UrlFormat when multiple placeholders are present.",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor UrlFormatPlaceholderRequiresDiagnosticId = new(
+        id: DiagnosticIds.UrlFormatPlaceholderRequiresDiagnosticId,
+        title: "UrlFormat with placeholder requires DiagnosticId",
+        messageFormat: "The UrlFormat '{0}' contains a placeholder but no DiagnosticId is specified. The compiler will substitute the default 'CS0618', which is unlikely to produce a valid URL.",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor MissingObsoleteAttributeDiagnosticIdArgument = new(
+        id: DiagnosticIds.MissingObsoleteAttributeDiagnosticIdArgument,
+        title: "Obsolete attributes should have a DiagnosticId value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute is missing the DiagnosticId value specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor MissingObsoleteAttributeUrlFormatArgument = new(
+        id: DiagnosticIds.MissingObsoleteAttributeUrlFormatArgument,
+        title: "Obsolete attributes should have a UrlFormat value that matches the ObsoleteMetadata attribute",
+        messageFormat: "The Obsolete attribute is missing the UrlFormat value specified in the ObsoleteMetadata attribute",
+        category: "Code",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
